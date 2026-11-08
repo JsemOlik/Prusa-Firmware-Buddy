@@ -263,6 +263,9 @@ struct CurrentStore
 
     StoreItem<SoundMode, defaults::sound_mode, ItemFlag::user_interface, journal::hash("Sound Mode")> sound_mode;
     StoreItem<uint8_t, defaults::sound_volume, ItemFlag::user_interface, journal::hash("Sound Volume")> sound_volume;
+    StoreItem<FinishMelody, FinishMelody::chime, ItemFlag::user_interface, journal::hash("Finish Melody")> finish_melody;
+    /// Turn off the heaters and run the print fan until the hotend cools down when a print finishes
+    StoreItem<bool, false, ItemFlag::features, journal::hash("Cooldown After Print")> cooldown_after_print;
     StoreItem<uint16_t, defaults::language, ItemFlag::user_interface, journal::hash("Language")> language;
     StoreItem<uint8_t, 0, ItemFlag::user_interface, journal::hash("File Sort")> file_sort; // filebrowser file sort options
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Menu Timeout")> menu_timeout; // on / off menu timeout flag

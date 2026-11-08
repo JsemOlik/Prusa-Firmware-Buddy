@@ -27,3 +27,13 @@ enum class SoundType : uint8_t {
     waiting_beep,
     single_beep_always_loud, // Single beep that ignores SoundMode settings, so we can play the sound in self tests
 };
+
+// !!! DO NOT REORDER, DO NOT CHANGE - this is used in config store
+enum class FinishMelody : uint8_t {
+    off,
+    beep,
+    chime,
+    fanfare,
+    arpeggio,
+    _count,
+};

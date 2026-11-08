@@ -9751,3 +9751,27 @@ msgstr "Zatím žádné výsledky"
 #: src/gui/MItem_tools.hpp
 msgid "Lights Follow Theme"
 msgstr "Světla podle motivu"
+
+#: src/gui/MItem_tools.cpp
+msgid "Finish Melody"
+msgstr "Melodie po tisku"
+
+#: src/gui/MItem_tools.cpp
+msgid "Cooldown After Print"
+msgstr "Chlazení po tisku"
+
+#: src/gui/MItem_tools.cpp
+msgid "Beep"
+msgstr "Pípnutí"
+
+#: src/gui/MItem_tools.cpp
+msgid "Chime"
+msgstr "Zvonkohra"
+
+#: src/gui/MItem_tools.cpp
+msgid "Fanfare"
+msgstr "Fanfára"
+
+#: src/gui/MItem_tools.cpp
+msgid "Arpeggio"
+msgstr "Arpeggio"

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <atomic>
+#include <span>
 #include "sound_enum.hpp"
 
 namespace sound {
@@ -10,6 +12,8 @@ int get_volume();
 void set_mode(SoundMode);
 void set_volume(int);
 void play(SoundType);
+/// Plays the melody chosen for the end of a print, unless the sound mode is silent
+void play_finish_melody(FinishMelody);
 void stop();
 void update_1ms();
 
@@ -48,6 +52,14 @@ public:
     void update1ms();
     void singleSound(float frq, int16_t dur, float vol);
 
+    struct Note {
+        uint16_t frequency; ///< [Hz], 0 for a rest
+        uint16_t duration_ms;
+    };
+
+    /// Plays the notes in the background, \p melody has to outlive the playback
+    void play_melody(std::span<const Note> melody);
+
 private:
     Sound() = default;
     ~Sound() = default;
@@ -58,6 +70,7 @@ private:
     void _sound(int rep, float frq, int16_t dur, int16_t del, float vol, bool f);
     void _playSound(SoundType type, SoundMode mode);
     void nextRepeat();
+    float output_volume(float vol, bool forced) const;
     float real_volume(int displayed_volume); ///< converts displayed / saved volume to volume used by beeper
     uint8_t displayed_volume(float real_volume); ///< converts beeper volume to displayed / saved one
 
@@ -70,6 +83,14 @@ private:
     int16_t delay_active = 0; ///< live variable used for delay measure
     int16_t delay_set = 100; ///< added variable for delay between beeps
     SoundMode eSoundMode = SoundMode::_default_sound; ///< current mode
+
+    // Written by play_melody, read by update1ms from an interrupt.
+    // melody_length is written last, so the interrupt never sees a half set melody.
+    const Note *melody = nullptr;
+    std::atomic<size_t> melody_length = 0;
+    size_t melody_note = 0;
+    uint16_t melody_remaining_ms = 0;
+    float melody_volume = 0;
 
 public:
     /// main constant of main volume which is maximal volume that we allow

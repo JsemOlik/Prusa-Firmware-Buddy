@@ -164,6 +164,37 @@ int sound::get_volume() { return Sound::getInstance().getVolume(); }
 void sound::set_mode(SoundMode eSMode) { Sound::getInstance().setMode(eSMode); }
 void sound::set_volume(int volume) { Sound::getInstance().setVolume(volume); }
 void sound::play(SoundType eSoundType) { Sound::getInstance().play(eSoundType); }
+
+void sound::play_finish_melody(FinishMelody melody) {
+    using Note = Sound::Note;
+    static constexpr Note beep[] = { { 1000, 150 }, { 0, 100 }, { 1000, 150 }, { 0, 100 }, { 1000, 150 } };
+    static constexpr Note chime[] = { { 1047, 150 }, { 1319, 150 }, { 1568, 350 } };
+    static constexpr Note fanfare[] = { { 523, 120 }, { 659, 120 }, { 784, 120 }, { 1047, 250 }, { 0, 80 }, { 784, 120 }, { 1047, 450 } };
+    static constexpr Note arpeggio[] = { { 1047, 90 }, { 1319, 90 }, { 1568, 90 }, { 2093, 90 }, { 1568, 90 }, { 1319, 90 }, { 1047, 250 } };
+
+    if (get_mode() == SoundMode::silent) {
+        return;
+    }
+
+    switch (melody) {
+    case FinishMelody::beep:
+        Sound::getInstance().play_melody(beep);
+        break;
+    case FinishMelody::chime:
+        Sound::getInstance().play_melody(chime);
+        break;
+    case FinishMelody::fanfare:
+        Sound::getInstance().play_melody(fanfare);
+        break;
+    case FinishMelody::arpeggio:
+        Sound::getInstance().play_melody(arpeggio);
+        break;
+    case FinishMelody::off:
+    case FinishMelody::_count:
+        break;
+    }
+}
+
 void sound::stop() { Sound::getInstance().stop(); }
 void sound::update_1ms() { Sound::getInstance().update1ms(); }
 
@@ -253,17 +284,7 @@ void Sound::play(SoundType eSoundType) {
 void Sound::_sound(int rep, float frq, int16_t dur, int16_t del, [[maybe_unused]] float vol, bool f) {
     /// forced non-repeat sounds - can be played when another
     /// repeating sound is playing
-    float tmpVol;
-
-#if BOARD_IS_BUDDY()
-    if (varVolume > 1) {
-        tmpVol = 1.F;
-    } else {
-        tmpVol = f ? 0.3F : (vol * varVolume) * 0.3F;
-    }
-#else
-    tmpVol = f ? volumeInit : varVolume;
-#endif
+    const float tmpVol = output_volume(vol, f);
     if (rep == 1) {
         singleSound(frq, dur, tmpVol);
     } else {
@@ -283,6 +304,27 @@ void Sound::_sound(int rep, float frq, int16_t dur, int16_t del, [[maybe_unused]
         hwio_beeper_notone();
         nextRepeat();
     }
+}
+
+float Sound::output_volume([[maybe_unused]] float vol, bool forced) const {
+#if BOARD_IS_BUDDY()
+    if (varVolume > 1) {
+        return 1.F;
+    } else {
+        return forced ? 0.3F : (vol * varVolume) * 0.3F;
+    }
+#else
+    return forced ? volumeInit : varVolume;
+#endif
+}
+
+void Sound::play_melody(std::span<const Note> notes) {
+    melody_length = 0;
+    melody = notes.data();
+    melody_note = 0;
+    melody_remaining_ms = 0;
+    melody_volume = output_volume(1.F, false);
+    melody_length = notes.size();
 }
 
 /// Another repeat of sound signal. Just set live variable with duration_set of the beep and play it
@@ -334,6 +376,19 @@ void Sound::update1ms() {
                 nextRepeat();
             }
         }
+    }
+
+    if (melody_note < melody_length) {
+        if (melody_remaining_ms == 0) {
+            const Note &note = melody[melody_note++];
+            melody_remaining_ms = note.duration_ms;
+            hwio_beeper_notone();
+            if (note.frequency) {
+                // Leave a short gap so that repeated notes don't merge
+                hwio_beeper_tone2(note.frequency, note.duration_ms * 9 / 10, melody_volume);
+            }
+        }
+        --melody_remaining_ms;
     }
 
     /// calling hwio update fnc

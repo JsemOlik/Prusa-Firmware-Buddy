@@ -219,6 +219,22 @@ public:
     virtual void OnChange(size_t old_index) override;
 };
 
+class MI_FINISH_MELODY : public MenuItemSwitch {
+    static constexpr const char *const label = N_("Finish Melody");
+
+public:
+    MI_FINISH_MELODY();
+    virtual void OnChange(size_t old_index) override;
+};
+
+class MI_COOLDOWN_AFTER_PRINT : public WI_ICON_SWITCH_OFF_ON_t {
+    static constexpr const char *const label = N_("Cooldown After Print");
+
+public:
+    MI_COOLDOWN_AFTER_PRINT();
+    virtual void OnChange(size_t old_index) override;
+};
+
 class MI_SORT_FILES : public MenuItemSwitch {
 public:
     MI_SORT_FILES();

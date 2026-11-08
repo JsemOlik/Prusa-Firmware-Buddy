@@ -399,6 +399,35 @@ void MI_SOUND_MODE::OnChange(size_t /*old_index*/) {
 }
 
 /*****************************************************************************/
+// MI_FINISH_MELODY
+static constexpr EnumArray<FinishMelody, const char *, FinishMelody::_count> finish_melody_values {
+    { FinishMelody::off, N_("Off") },
+    { FinishMelody::beep, N_("Beep") },
+    { FinishMelody::chime, N_("Chime") },
+    { FinishMelody::fanfare, N_("Fanfare") },
+    { FinishMelody::arpeggio, N_("Arpeggio") },
+};
+
+MI_FINISH_MELODY::MI_FINISH_MELODY()
+    : MenuItemSwitch(_(label), finish_melody_values, std::to_underlying(config_store().finish_melody.get())) {
+}
+
+void MI_FINISH_MELODY::OnChange([[maybe_unused]] size_t old_index) {
+    const auto melody = static_cast<FinishMelody>(current_item());
+    config_store().finish_melody.set(melody);
+    sound::play_finish_melody(melody);
+}
+
+/*****************************************************************************/
+// MI_COOLDOWN_AFTER_PRINT
+MI_COOLDOWN_AFTER_PRINT::MI_COOLDOWN_AFTER_PRINT()
+    : WI_ICON_SWITCH_OFF_ON_t(config_store().cooldown_after_print.get(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_COOLDOWN_AFTER_PRINT::OnChange([[maybe_unused]] size_t old_index) {
+    config_store().cooldown_after_print.set(value());
+}
+
+/*****************************************************************************/
 // MI_SOUND_VOLUME
 static constexpr NumericInputConfig sound_volume_spin_config = {
     .max_value = PRINTER_IS_PRUSA_MINI() ? 11 : 3,

@@ -1,5 +1,6 @@
 #include "marlin_server.hpp"
 #include <common/marlin_vars.hpp>
+#include <sound.hpp>
 
 #include <option/has_crash_detection.h>
 #include <option/has_pause.h>
@@ -915,6 +916,34 @@ void io_expander_read_loop() {
 }
 #endif // HAS_I2C_EXPANDER()
 
+namespace {
+
+/// Print fan is running to cool down the hotend after a print
+bool cooldown_fan_active = false;
+
+void start_cooldown() {
+    thermalManager.disable_all_heaters();
+    thermalManager.set_print_fan_speed(255);
+    cooldown_fan_active = true;
+}
+
+void step_cooldown() {
+    static constexpr celsius_t cooled_down_temp = 50;
+
+    if (!cooldown_fan_active) {
+        return;
+    }
+    for (int8_t e = 0; e < HOTENDS; ++e) {
+        if (thermalManager.degHotend(e) >= cooled_down_temp) {
+            return;
+        }
+    }
+    thermalManager.set_print_fan_speed(0);
+    cooldown_fan_active = false;
+}
+
+} // namespace
+
 static void cycle() {
     // Some things are somewhat time-sensitive and should be updated even in nested loops
 #if HAS_CHAMBER_API()
@@ -948,6 +977,8 @@ static void cycle() {
 #endif
 
     buddy::safety_timer().step();
+
+    step_cooldown();
 
     // Although the timeout should never trigger within idle() (= when a gcode is run),
     // We still need to run the step() there to prevent "sampling bias" so that the timer could reset itself during movements and single-injected gcodes
@@ -1528,6 +1559,9 @@ void print_start(const char *filename, const GCodeReaderPosition &resume_pos, Pr
 
     // Clear warnings before print, like heaters disabled after 30 minutes.
     clear_warning(WarningType::HeatersTimeout);
+
+    // The print takes over the print fan
+    cooldown_fan_active = false;
 
     switch (server.print_state) {
 
@@ -2884,6 +2918,10 @@ static void _server_print_loop(void) {
 #if HAS_SIDE_LEDS()
             leds::SideStripHandler::instance().notify_print_finished();
 #endif
+            sound::play_finish_melody(config_store().finish_melody.get());
+            if (config_store().cooldown_after_print.get()) {
+                start_cooldown();
+            }
         }
         break;
     case State::Exit:
