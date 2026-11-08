@@ -38,12 +38,17 @@ using buddy::BootstrapStage;
 ScreenSplash::ScreenSplash()
     : screen_t()
     , text_progress(this, Rect16(0, SPLASHSCREEN_VERSION_Y, GuiDefaults::ScreenWidth, 18), is_multiline::no)
+    , text_credit(this, Rect16(0, SPLASHSCREEN_VERSION_Y + 20, GuiDefaults::ScreenWidth, 18), is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("FW by Oliver Steiner :D"))
     , progress(this, Rect16(SPLASHSCREEN_PROGRESSBAR_X, SPLASHSCREEN_PROGRESSBAR_Y, SPLASHSCREEN_PROGRESSBAR_W, SPLASHSCREEN_PROGRESSBAR_H), COLOR_BRAND, COLOR_GRAY, 6) {
     ClrMenuTimeoutClose();
 
     text_progress.set_font(Font::small);
     text_progress.SetAlignment(Align_t::Center());
     text_progress.SetTextColor(COLOR_GRAY);
+
+    text_credit.set_font(Font::small);
+    text_credit.SetAlignment(Align_t::Center());
+    text_credit.SetTextColor(COLOR_BRAND);
 
     snprintf(text_progress_buffer, sizeof(text_progress_buffer), "Firmware %s", version::project_version_full);
     text_progress.SetText(string_view_utf8::MakeRAM(text_progress_buffer));
@@ -218,6 +223,7 @@ void ScreenSplash::draw() {
     Validate();
     progress.Invalidate();
     text_progress.Invalidate();
+    text_credit.Invalidate();
     screen_t::draw(); // We want to draw over bootloader's screen without flickering/redrawing
 #ifdef _DEBUG
     #if HAS_MINI_DISPLAY()
