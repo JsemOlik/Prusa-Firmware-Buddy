@@ -11,6 +11,7 @@ class ScreenSplash : public screen_t {
     WindowRoundedProgressBar progress;
 
     char text_progress_buffer[32];
+    bool logo_drawn = false;
 
 public:
     ScreenSplash();

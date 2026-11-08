@@ -73,6 +73,7 @@ target_sources(
           screen_printing_end_result.cpp
           screen_prusa_link.cpp
           screen_splash.cpp
+          boot_logo.cpp
           ScreenFactory.cpp
           ScreenHandler.cpp
           ScreenPrintingModel.cpp

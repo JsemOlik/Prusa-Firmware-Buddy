@@ -235,6 +235,26 @@ public:
     virtual void OnChange(size_t old_index) override;
 };
 
+class MI_BOOT_LOGO_IMPORT : public IWindowMenuItem {
+    static constexpr const char *const label = N_("Load Boot Logo from USB");
+
+public:
+    MI_BOOT_LOGO_IMPORT();
+
+protected:
+    virtual void click(IWindowMenu &window_menu) override;
+};
+
+class MI_BOOT_LOGO_REMOVE : public IWindowMenuItem {
+    static constexpr const char *const label = N_("Remove Boot Logo");
+
+public:
+    MI_BOOT_LOGO_REMOVE();
+
+protected:
+    virtual void click(IWindowMenu &window_menu) override;
+};
+
 class MI_SORT_FILES : public MenuItemSwitch {
 public:
     MI_SORT_FILES();

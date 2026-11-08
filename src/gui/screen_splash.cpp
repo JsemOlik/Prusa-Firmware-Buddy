@@ -1,6 +1,7 @@
 #include "screen_splash.hpp"
 
 #include "display.hpp"
+#include "boot_logo.hpp"
 #include <bsod.h>
 #include <buddy/bootstrap_state.hpp>
 #include <option/has_ht_hotend.h>
@@ -220,6 +221,11 @@ ScreenSplash::~ScreenSplash() {
 }
 
 void ScreenSplash::draw() {
+    if (!logo_drawn) {
+        logo_drawn = true;
+        boot_logo::draw(Rect16(0, 0, GuiDefaults::ScreenWidth, SPLASHSCREEN_PROGRESSBAR_Y - 5));
+    }
+
     Validate();
     progress.Invalidate();
     text_progress.Invalidate();

@@ -8,6 +8,7 @@
 #include "window_dlg_wait.hpp"
 #include "window_file_list.hpp"
 #include "sound.hpp"
+#include "boot_logo.hpp"
 #include "wui_api.h"
 #include "printers.h"
 #include "i18n.h"
@@ -425,6 +426,43 @@ MI_COOLDOWN_AFTER_PRINT::MI_COOLDOWN_AFTER_PRINT()
 
 void MI_COOLDOWN_AFTER_PRINT::OnChange([[maybe_unused]] size_t old_index) {
     config_store().cooldown_after_print.set(value());
+}
+
+/*****************************************************************************/
+// MI_BOOT_LOGO_IMPORT
+MI_BOOT_LOGO_IMPORT::MI_BOOT_LOGO_IMPORT()
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_BOOT_LOGO_IMPORT::click(IWindowMenu & /*window_menu*/) {
+    switch (boot_logo::import_from_usb()) {
+    case boot_logo::ImportResult::ok:
+        MsgBoxInfo(_("The boot logo has been loaded. It will be shown on the next start."), Responses_Ok);
+        break;
+    case boot_logo::ImportResult::no_file:
+        MsgBoxError(_("File boot_logo.qoi was not found on the USB drive."), Responses_Ok);
+        break;
+    case boot_logo::ImportResult::invalid:
+        MsgBoxError(_("The boot logo has to be a QOI image of at most 480x160 pixels. Convert it with utils/boot_logo.py."), Responses_Ok);
+        break;
+    case boot_logo::ImportResult::write_failed:
+        MsgBoxError(_("Failed to save the boot logo."), Responses_Ok);
+        break;
+    }
+}
+
+/*****************************************************************************/
+// MI_BOOT_LOGO_REMOVE
+MI_BOOT_LOGO_REMOVE::MI_BOOT_LOGO_REMOVE()
+    : IWindowMenuItem(_(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_BOOT_LOGO_REMOVE::click(IWindowMenu & /*window_menu*/) {
+    if (!boot_logo::exists()) {
+        MsgBoxInfo(_("No boot logo is loaded."), Responses_Ok);
+        return;
+    }
+    if (MsgBoxQuestion(_("Remove the boot logo?"), Responses_YesNo) == Response::Yes) {
+        boot_logo::remove();
+    }
 }
 
 /*****************************************************************************/

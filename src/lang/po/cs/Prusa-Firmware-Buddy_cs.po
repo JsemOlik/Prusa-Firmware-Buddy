@@ -9775,3 +9775,35 @@ msgstr "Fanfára"
 #: src/gui/MItem_tools.cpp
 msgid "Arpeggio"
 msgstr "Arpeggio"
+
+#: src/gui/MItem_tools.cpp
+msgid "Load Boot Logo from USB"
+msgstr "Načíst logo z USB"
+
+#: src/gui/MItem_tools.cpp
+msgid "Remove Boot Logo"
+msgstr "Odstranit logo"
+
+#: src/gui/MItem_tools.cpp
+msgid "The boot logo has been loaded. It will be shown on the next start."
+msgstr "Logo bylo načteno. Zobrazí se při příštím spuštění."
+
+#: src/gui/MItem_tools.cpp
+msgid "File boot_logo.qoi was not found on the USB drive."
+msgstr "Soubor boot_logo.qoi nebyl na USB disku nalezen."
+
+#: src/gui/MItem_tools.cpp
+msgid "The boot logo has to be a QOI image of at most 480x160 pixels. Convert it with utils/boot_logo.py."
+msgstr "Logo musí být obrázek QOI o velikosti nejvýše 480x160 pixelů. Převeďte ho pomocí utils/boot_logo.py."
+
+#: src/gui/MItem_tools.cpp
+msgid "Failed to save the boot logo."
+msgstr "Logo se nepodařilo uložit."
+
+#: src/gui/MItem_tools.cpp
+msgid "No boot logo is loaded."
+msgstr "Není načteno žádné logo."
+
+#: src/gui/MItem_tools.cpp
+msgid "Remove the boot logo?"
+msgstr "Odstranit logo?"
