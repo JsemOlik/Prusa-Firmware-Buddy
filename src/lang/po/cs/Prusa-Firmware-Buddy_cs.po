@@ -9711,3 +9711,39 @@ msgstr "Max. rychlost XY [mm/s]"
 #: src/gui/screen_menu_motion_limits.cpp
 msgid "Motion Limits"
 msgstr "Limity pohybu"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Cancelled"
+msgstr "Zrušeno"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Searching"
+msgstr "Hledání"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Find Max Accel"
+msgstr "Najít max. zrychlení"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Last Results"
+msgstr "Poslední výsledky"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Highest passed"
+msgstr "Nejvyšší úspěšné"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Skipped steps at"
+msgstr "Přeskočené kroky při"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Recommended"
+msgstr "Doporučeno"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Use the recommended value as the max acceleration?"
+msgstr "Použít doporučenou hodnotu jako max. zrychlení?"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "No results yet"
+msgstr "Zatím žádné výsledky"

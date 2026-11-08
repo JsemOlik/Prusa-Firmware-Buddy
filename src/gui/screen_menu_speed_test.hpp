@@ -43,14 +43,38 @@ public:
         : MI_SPEED_TEST_ACCEL_BASE(index) {}
 };
 
-class MI_SPEED_TEST_START : public IWindowMenuItem {
-    static constexpr const char *label = N_("Start Test");
-
+/// Forwards the click to the screen
+class MI_SPEED_TEST_ACTION : public IWindowMenuItem {
 public:
-    MI_SPEED_TEST_START();
+    MI_SPEED_TEST_ACTION(const char *label);
 
 protected:
     void click(IWindowMenu &window_menu) override;
+};
+
+class MI_SPEED_TEST_START : public MI_SPEED_TEST_ACTION {
+    static constexpr const char *label = N_("Start Test");
+
+public:
+    MI_SPEED_TEST_START()
+        : MI_SPEED_TEST_ACTION(label) {}
+};
+
+/// Raises the acceleration from Accel 1 at Speed 1 until steps are skipped
+class MI_SPEED_TEST_SEARCH : public MI_SPEED_TEST_ACTION {
+    static constexpr const char *label = N_("Find Max Accel");
+
+public:
+    MI_SPEED_TEST_SEARCH()
+        : MI_SPEED_TEST_ACTION(label) {}
+};
+
+class MI_SPEED_TEST_LAST_RESULTS : public MI_SPEED_TEST_ACTION {
+    static constexpr const char *label = N_("Last Results");
+
+public:
+    MI_SPEED_TEST_LAST_RESULTS()
+        : MI_SPEED_TEST_ACTION(label) {}
 };
 
 static_assert(speed_test::max_runs == 3);
@@ -65,7 +89,9 @@ using ScreenMenuSpeedTestSpec = ScreenMenu<EFooter::On,
     MI_SPEED_TEST_ACCEL<1>,
     MI_SPEED_TEST_SPEED<2>,
     MI_SPEED_TEST_ACCEL<2>,
-    MI_SPEED_TEST_START>;
+    MI_SPEED_TEST_START,
+    MI_SPEED_TEST_SEARCH,
+    MI_SPEED_TEST_LAST_RESULTS>;
 
 class ScreenMenuSpeedTest : public ScreenMenuSpeedTestSpec {
 public:
@@ -78,4 +104,6 @@ protected:
 private:
     void update_visibility();
     void run_test();
+    void run_search();
+    void show_last_results();
 };

@@ -16,8 +16,13 @@ static_assert(PRINTER_IS_PRUSA_COREONEL());
 
 namespace speed_test {
 
-std::array<RunResult, max_runs> &results() {
-    static std::array<RunResult, max_runs> instance;
+RunResults &results() {
+    static RunResults instance;
+    return instance;
+}
+
+SearchResult &search_result() {
+    static SearchResult instance;
     return instance;
 }
 
@@ -85,7 +90,11 @@ std::optional<xy_pos_t> probe_walls() {
     return triggered;
 }
 
-/// @returns false if the motion was aborted
+bool cancelled() {
+    return speed_test::progress().cancel;
+}
+
+/// @returns false if the motion was aborted or cancelled
 bool run_patterns(feedRate_t speed, uint8_t iterations) {
     for (uint8_t i = 0; i < iterations; i++) {
         // Moves are queued ahead of the motion, so this leads the actual motion by up to a planner buffer
@@ -95,7 +104,7 @@ bool run_patterns(feedRate_t speed, uint8_t iterations) {
                 current_position.x = point.x;
                 current_position.y = point.y;
                 line_to_current_position(speed);
-                if (planner.draining()) {
+                if (planner.draining() || cancelled()) {
                     return false;
                 }
             }
@@ -118,6 +127,9 @@ RunResult::Status run(RunResult &result, float speed, float accel, uint8_t itera
     const auto before = probe_walls();
     if (!before) {
         return RunResult::Status::failed;
+    }
+    if (cancelled()) {
+        return RunResult::Status::cancelled;
     }
 
     const auto prev_settings = planner.user_settings;
@@ -144,7 +156,15 @@ RunResult::Status run(RunResult &result, float speed, float accel, uint8_t itera
         progress.phase = Phase::moving;
 
         if (!run_patterns(result.speed, iterations)) {
-            return RunResult::Status::failed;
+            if (!cancelled() || planner.draining()) {
+                return RunResult::Status::failed;
+            }
+
+            // The moves already queued still run at full speed, so the position may be off
+            planner.synchronize();
+            progress.phase = Phase::homing;
+            GcodeSuite::G28_no_parser(true, true, false);
+            return RunResult::Status::cancelled;
         }
     }
 
@@ -175,6 +195,28 @@ RunResult::Status run(RunResult &result, float speed, float accel, uint8_t itera
     return RunResult::Status::passed;
 }
 
+/// Raises the acceleration from \p accel by \p step until steps are skipped or the hardware limit is reached
+void search(float speed, float accel, float step, uint8_t iterations) {
+    constexpr uint32_t max_accel = std::to_array<uint32_t>(HWLIMIT_NORMAL_MAX_ACCELERATION)[X_AXIS];
+
+    auto &search = speed_test::search_result();
+    search = {};
+    auto &result = speed_test::results()[0];
+    for (; accel <= max_accel; accel += step) {
+        result = { .speed = static_cast<uint16_t>(speed), .accel = static_cast<uint32_t>(accel) };
+        result.status = cancelled() ? RunResult::Status::cancelled : run(result, speed, accel, iterations);
+        search.status = result.status;
+        search.speed = result.speed;
+        if (result.status != RunResult::Status::passed) {
+            if (result.status == RunResult::Status::skipped_steps) {
+                search.failed_accel = result.accel;
+            }
+            return;
+        }
+        search.passed_accel = result.accel;
+    }
+}
+
 } // namespace
 
 /** \addtogroup G-Codes
@@ -187,21 +229,27 @@ RunResult::Status run(RunResult &result, float speed, float accel, uint8_t itera
  * Moves the head along a large and a small diagonal-and-box pattern at the given speed and
  * acceleration, and checks for skipped steps by stalling the head against the X and Y homing
  * walls before and after the moves. Homes the printer if needed and re-homes X and Y at the end.
+ * Does nothing while the UI requests the speed test to be cancelled.
+ *
+ * With F, searches for the highest acceleration that does not skip steps: starts at A and raises
+ * it by F until steps are skipped or the hardware limit is reached.
  *
  *#### Usage
  *
- *    M1990 [ S | A | I | R ]
+ *    M1990 [ S | A | I | R | F ]
  *
  *#### Parameters
  *
  * - `S` - Speed [mm/s], defaults to the current max XY feedrate
  * - `A` - Acceleration [mm/s^2], defaults to the current max XY acceleration
  * - `I` - Number of iterations of the pattern (1-3), defaults to 1
- * - `R` - Result slot (0-2) to store the result to, defaults to 0
+ * - `R` - Result slot (0-2) to store the result to, defaults to 0; the search uses slot 0
+ * - `F` - Acceleration step of the search [mm/s^2], at least 100
  *
  *#### Examples
  *
  *    M1990 S300 A20000 I3 ; Test 300 mm/s at 20000 mm/s^2, three times
+ *    M1990 S300 A5000 F1000 ; Find the highest acceleration from 5000 mm/s^2 up at 300 mm/s
  */
 void PrusaGcodeSuite::M1990() {
     GCodeParser2 p;
@@ -215,15 +263,20 @@ void PrusaGcodeSuite::M1990() {
     const uint8_t iterations = std::clamp<uint8_t>(p.option<uint8_t>('I').value_or(1), 1, speed_test::max_iterations);
 
     auto &progress = speed_test::progress();
-    progress.slot = slot;
+    const auto step = p.option<float>('F');
+    progress.slot = step ? 0 : slot;
     progress.iteration = 0;
     progress.iterations = iterations;
     progress.speed = static_cast<uint16_t>(speed);
     progress.accel = static_cast<uint32_t>(accel);
 
-    auto &result = speed_test::results()[slot];
-    result = {};
-    result.status = run(result, speed, accel, iterations);
+    if (step) {
+        search(speed, accel, std::max(*step, 100.0f), iterations);
+    } else {
+        auto &result = speed_test::results()[slot];
+        result = { .speed = static_cast<uint16_t>(speed), .accel = static_cast<uint32_t>(accel) };
+        result.status = cancelled() ? RunResult::Status::cancelled : run(result, speed, accel, iterations);
+    }
 
     progress.phase = Phase::idle;
 }

@@ -24,6 +24,7 @@
 #include <time_tools.hpp>
 #include <encoded_filament.hpp>
 #include <selftest_result.hpp>
+#include <speed_test_result.hpp>
 #include <module/prusa/dock_position.hpp>
 #include <module/prusa/tool_offset.hpp>
 #include <tristate.hpp>
@@ -825,6 +826,9 @@ struct CurrentStore
     StoreItem<uint32_t, 0, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Max Acceleration XY")> max_acceleration_xy;
     /// User override of the default XY max feedrate (M203) [mm/s], 0 = firmware default
     StoreItem<uint16_t, 0, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Max Feedrate XY")> max_feedrate_xy;
+
+    StoreItem<speed_test::RunResults, speed_test::RunResults {}, ItemFlag::stats, journal::hash("Speed Test Results")> speed_test_results;
+    StoreItem<speed_test::SearchResult, speed_test::SearchResult {}, ItemFlag::stats, journal::hash("Speed Test Search Result")> speed_test_search_result;
 
     input_shaper::Config get_input_shaper_config();
     void set_input_shaper_config(const input_shaper::Config &);

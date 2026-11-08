@@ -3,11 +3,14 @@
 #include "ScreenHandler.hpp"
 #include "img_resources.hpp"
 #include "marlin_client.hpp"
+#include "screen_menu_motion_limits.hpp"
 #include "window_dlg_wait.hpp"
 #include <DialogHandler.hpp>
 #include <common/marlin_vars.hpp>
+#include <config_store/store_instance.hpp>
 #include <window_msgbox.hpp>
 
+#include <algorithm>
 #include <cstdio>
 #include <cstring>
 
@@ -34,6 +37,9 @@ constexpr NumericInputConfig accel_config {
     .max_value = 20000,
     .step = 500,
 };
+
+/// [mm/s^2]
+constexpr unsigned search_step = 1000;
 
 struct Combo {
     uint16_t speed;
@@ -69,12 +75,22 @@ const char *status_label(speed_test::RunResult::Status status) {
         return N_("Skipped steps");
     case Status::failed:
         return N_("Failed");
+    case Status::cancelled:
+        return N_("Cancelled");
     }
     return "";
 }
 
+/// Translates \p text into \p buffer, for use as a printf argument
+template <size_t N>
+const char *translate(std::array<char, N> &buffer, const char *text) {
+    _(text).copyToRAM(buffer.data(), buffer.size());
+    return buffer.data();
+}
+
 using ProgressText = std::array<char, 128>;
 
+/// @param runs number of tests, 0 for the acceleration search
 void format_progress(ProgressText &text, uint8_t runs) {
     using Phase = speed_test::Progress::Phase;
     const auto &progress = speed_test::progress();
@@ -83,24 +99,141 @@ void format_progress(ProgressText &text, uint8_t runs) {
     switch (progress.phase.load()) {
     case Phase::idle:
     case Phase::homing:
-        _("Homing").copyToRAM(phase.data(), phase.size());
+        translate(phase, N_("Homing"));
         break;
     case Phase::measuring_before:
     case Phase::measuring_after:
-        _("Measuring position").copyToRAM(phase.data(), phase.size());
+        translate(phase, N_("Measuring position"));
         break;
     case Phase::moving: {
         std::array<char, 32> format;
-        _("Iteration %u/%u").copyToRAM(format.data(), format.size());
-        snprintf(phase.data(), phase.size(), format.data(), progress.iteration.load(), progress.iterations.load());
+        snprintf(phase.data(), phase.size(), translate(format, N_("Iteration %u/%u")), progress.iteration.load(), progress.iterations.load());
         break;
     }
     }
 
-    std::array<char, 32> test;
-    _("Test").copyToRAM(test.data(), test.size());
-    snprintf(text.data(), text.size(), "%s %u/%u: %u mm/s, %lu mm/s2\n%s",
-        test.data(), progress.slot.load() + 1, runs, progress.speed.load(), static_cast<unsigned long>(progress.accel.load()), phase.data());
+    std::array<char, 40> header;
+    if (runs) {
+        std::array<char, 32> test;
+        snprintf(header.data(), header.size(), "%s %u/%u", translate(test, N_("Test")), progress.slot.load() + 1, runs);
+    } else {
+        translate(header, N_("Searching"));
+    }
+
+    snprintf(text.data(), text.size(), "%s: %u mm/s, %lu mm/s2\n%s",
+        header.data(), progress.speed.load(), static_cast<unsigned long>(progress.accel.load()), phase.data());
+}
+
+class ProgressBox final : public MsgBoxBase {
+public:
+    ProgressBox()
+        : MsgBoxBase(GuiDefaults::DialogFrameRect, { Response::Abort, Response::_none, Response::_none, Response::_none }, 0, {}) {}
+
+    void set_progress(const string_view_utf8 &str) {
+        // window_text_t skips the redraw when handed the same buffer again, even if its contents changed
+        text.SetText({});
+        text.SetText(str);
+    }
+};
+
+/// Shows the progress of the queued M1990s until they all finish, offering to cancel them
+/// @param runs number of tests, 0 for the acceleration search
+void show_progress(uint8_t runs) {
+    // Two buffers, because the dialog keeps pointing to the displayed one
+    struct {
+        ProgressBox box;
+        std::array<ProgressText, 2> texts {};
+        size_t shown = 0;
+        uint8_t runs = 0;
+    } state;
+    state.runs = runs;
+
+    Screens::Access()->gui_loop_until_dialog_closed([s = &state] {
+        // Allows popping up a warning dialog on top of this one
+        DialogHandler::Access().Loop();
+
+        auto &next = s->texts[1 - s->shown];
+        format_progress(next, s->runs);
+        if (strcmp(next.data(), s->texts[s->shown].data())) {
+            s->shown = 1 - s->shown;
+            s->box.set_progress(string_view_utf8::MakeRAM(next.data()));
+        }
+
+        if (!marlin_vars().is_processing.get()) {
+            Screens::Access()->close_dialog();
+        }
+    });
+
+    if (state.box.GetResult() == Response::Abort) {
+        // The moves already queued take a moment to finish, and the printer re-homes afterwards
+        speed_test::progress().cancel = true;
+        window_dlg_wait_t::wait_for_gcodes_to_finish();
+    }
+}
+
+/// Prepares for queueing M1990s
+void start() {
+    // Wait for anything still running, so that the results are not read or written concurrently
+    window_dlg_wait_t::wait_for_gcodes_to_finish();
+    speed_test::progress().cancel = false;
+}
+
+using ResultsText = std::array<char, 384>;
+
+size_t format_results(ResultsText &text, const speed_test::RunResults &results) {
+    using Status = speed_test::RunResult::Status;
+
+    size_t len = 0;
+    for (size_t i = 0; i < results.size() && len < text.size(); i++) {
+        const auto &result = results[i];
+        if (result.status == Status::not_run) {
+            continue;
+        }
+
+        std::array<char, 32> status;
+        len += snprintf(text.data() + len, text.size() - len, "%u: %u mm/s, %lu mm/s2\n%s",
+            static_cast<unsigned>(i + 1), result.speed, static_cast<unsigned long>(result.accel), translate(status, status_label(result.status)));
+        if (len >= text.size()) {
+            break;
+        }
+
+        if (result.status == Status::passed || result.status == Status::skipped_steps) {
+            len += snprintf(text.data() + len, text.size() - len, " (X %.2f, Y %.2f mm)\n",
+                static_cast<double>(result.drift_x), static_cast<double>(result.drift_y));
+        } else {
+            len += snprintf(text.data() + len, text.size() - len, "\n");
+        }
+    }
+    return std::min(len, text.size() - 1);
+}
+
+size_t format_search(ResultsText &text, const speed_test::SearchResult &search) {
+    using Status = speed_test::RunResult::Status;
+
+    std::array<char, 48> label;
+    size_t len = snprintf(text.data(), text.size(), "%s: %u mm/s\n", translate(label, N_("Speed")), search.speed);
+
+    const auto append = [&](const char *label_text, uint32_t accel) {
+        if (len < text.size()) {
+            len += snprintf(text.data() + len, text.size() - len, "%s: %lu mm/s2\n", translate(label, label_text), static_cast<unsigned long>(accel));
+        }
+    };
+
+    if (search.passed_accel) {
+        append(N_("Highest passed"), search.passed_accel);
+    }
+    if (search.failed_accel) {
+        append(N_("Skipped steps at"), search.failed_accel);
+    }
+    if (search.status == Status::failed || search.status == Status::cancelled) {
+        if (len < text.size()) {
+            len += snprintf(text.data() + len, text.size() - len, "%s\n", translate(label, status_label(search.status)));
+        }
+    }
+    if (search.recommended_accel()) {
+        append(N_("Recommended"), search.recommended_accel());
+    }
+    return std::min(len, text.size() - 1);
 }
 
 } // namespace
@@ -117,10 +250,10 @@ MI_SPEED_TEST_SPEED_BASE::MI_SPEED_TEST_SPEED_BASE(uint8_t index)
 MI_SPEED_TEST_ACCEL_BASE::MI_SPEED_TEST_ACCEL_BASE(uint8_t index)
     : WiSpin(default_combos[index].accel, accel_config, _(accel_labels[index])) {}
 
-MI_SPEED_TEST_START::MI_SPEED_TEST_START()
+MI_SPEED_TEST_ACTION::MI_SPEED_TEST_ACTION(const char *label)
     : IWindowMenuItem(_(label)) {}
 
-void MI_SPEED_TEST_START::click(IWindowMenu & /*window_menu*/) {
+void MI_SPEED_TEST_ACTION::click(IWindowMenu & /*window_menu*/) {
     Screens::Access()->WindowEvent(GUI_event_t::CHILD_CLICK, this);
 }
 
@@ -136,7 +269,13 @@ void ScreenMenuSpeedTest::windowEvent(window_t *sender, GUI_event_t event, void 
         update_visibility();
         break;
     case GUI_event_t::CHILD_CLICK:
-        run_test();
+        if (param == &Item<MI_SPEED_TEST_START>()) {
+            run_test();
+        } else if (param == &Item<MI_SPEED_TEST_SEARCH>()) {
+            run_search();
+        } else if (param == &Item<MI_SPEED_TEST_LAST_RESULTS>()) {
+            show_last_results();
+        }
         return;
     default:
         break;
@@ -166,51 +305,67 @@ void ScreenMenuSpeedTest::run_test() {
         { static_cast<uint16_t>(Item<MI_SPEED_TEST_SPEED<2>>().value()), static_cast<uint16_t>(Item<MI_SPEED_TEST_ACCEL<2>>().value()) },
     } };
 
-    // Wait for anything still running, so that the results cleared below are not written concurrently
-    window_dlg_wait_t::wait_for_gcodes_to_finish();
-
+    start();
     auto &results = speed_test::results();
     results.fill({});
     for (uint8_t i = 0; i < runs; i++) {
         marlin_client::gcode_printf("M1990 S%u A%u I%d R%u", combos[i].speed, combos[i].accel, iterations, i);
     }
+    show_progress(runs);
 
-    // Two buffers, because the dialog keeps pointing to the displayed one
-    struct {
-        std::array<ProgressText, 2> texts {};
-        size_t shown = 0;
-        uint8_t runs;
-    } state { .runs = runs };
-    window_dlg_wait_t::wait_until({}, [s = &state](window_dlg_wait_t &dlg) {
-        // Allows popping up a warning dialog on top of this one
-        DialogHandler::Access().Loop();
+    config_store().speed_test_results.set(results);
 
-        auto &next = s->texts[1 - s->shown];
-        format_progress(next, s->runs);
-        if (strcmp(next.data(), s->texts[s->shown].data())) {
-            s->shown = 1 - s->shown;
-            dlg.set_text(string_view_utf8::MakeRAM(next.data()));
-        }
-        return !marlin_vars().is_processing.get();
-    });
+    ResultsText text;
+    format_results(text, results);
+    MsgBoxInfo(string_view_utf8::MakeRAM(text.data()), Responses_Ok);
+}
 
-    std::array<char, 384> text;
-    size_t len = 0;
-    for (uint8_t i = 0; i < runs && len < text.size(); i++) {
-        const auto &result = results[i];
+void ScreenMenuSpeedTest::run_search() {
+    const auto iterations = static_cast<int>(Item<MI_SPEED_TEST_ITERATIONS>().value());
+    const auto speed = static_cast<unsigned>(Item<MI_SPEED_TEST_SPEED<0>>().value());
+    const auto accel = static_cast<unsigned>(Item<MI_SPEED_TEST_ACCEL<0>>().value());
 
-        std::array<char, 32> status;
-        _(status_label(result.status)).copyToRAM(status.data(), status.size());
+    start();
+    speed_test::results().fill({});
+    marlin_client::gcode_printf("M1990 S%u A%u I%d F%u", speed, accel, iterations, search_step);
+    show_progress(0);
 
-        if (result.status == speed_test::RunResult::Status::passed || result.status == speed_test::RunResult::Status::skipped_steps) {
-            len += snprintf(text.data() + len, text.size() - len, "%u: %u mm/s, %lu mm/s2\n%s (X %.2f, Y %.2f mm)\n",
-                i + 1, result.speed, static_cast<unsigned long>(result.accel), status.data(),
-                static_cast<double>(result.drift_x), static_cast<double>(result.drift_y));
-        } else {
-            len += snprintf(text.data() + len, text.size() - len, "%u: %u mm/s, %u mm/s2\n%s\n",
-                i + 1, combos[i].speed, combos[i].accel, status.data());
-        }
+    const auto search = speed_test::search_result();
+    config_store().speed_test_search_result.set(search);
+
+    ResultsText text;
+    size_t len = format_search(text, search);
+    const uint32_t recommended = search.recommended_accel();
+    if (recommended == 0) {
+        MsgBoxInfo(string_view_utf8::MakeRAM(text.data()), Responses_Ok);
+        return;
     }
 
-    MsgBoxInfo(string_view_utf8::MakeRAM(text.data()), Responses_Ok);
+    std::array<char, 96> question;
+    snprintf(text.data() + len, text.size() - len, "\n%s", translate(question, N_("Use the recommended value as the max acceleration?")));
+    if (MsgBoxQuestion(string_view_utf8::MakeRAM(text.data()), Responses_YesNo) == Response::Yes) {
+        motion_limits::set_max_acceleration_xy(recommended);
+    }
+}
+
+void ScreenMenuSpeedTest::show_last_results() {
+    const auto results = config_store().speed_test_results.get();
+    const auto search = config_store().speed_test_search_result.get();
+
+    const bool has_results = std::ranges::any_of(results, [](const auto &result) { return result.status != speed_test::RunResult::Status::not_run; });
+    const bool has_search = search.status != speed_test::RunResult::Status::not_run;
+    if (!has_results && !has_search) {
+        MsgBoxInfo(_("No results yet"), Responses_Ok);
+        return;
+    }
+
+    ResultsText text;
+    if (has_results) {
+        format_results(text, results);
+        MsgBoxInfo(string_view_utf8::MakeRAM(text.data()), Responses_Ok);
+    }
+    if (has_search) {
+        format_search(text, search);
+        MsgBoxInfo(string_view_utf8::MakeRAM(text.data()), Responses_Ok);
+    }
 }
