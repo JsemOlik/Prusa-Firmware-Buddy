@@ -463,6 +463,12 @@ bool MI_COLOR_THEME::on_item_selected(const OnItemSelectedArgs &args) {
 }
 
 /*****************************************************************************/
+// MI_FW_AUTHOR
+
+MI_FW_AUTHOR::MI_FW_AUTHOR()
+    : IWiInfo(string_view_utf8::MakeCPUFLASH("Oliver Steiner"), _("Firmware by")) {}
+
+/*****************************************************************************/
 // MI_TIMEZONE
 static constexpr NumericInputConfig timezone_spin_config = {
     .min_value = -12,

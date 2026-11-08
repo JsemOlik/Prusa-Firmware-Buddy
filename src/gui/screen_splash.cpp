@@ -38,7 +38,7 @@ using buddy::BootstrapStage;
 ScreenSplash::ScreenSplash()
     : screen_t()
     , text_progress(this, Rect16(0, SPLASHSCREEN_VERSION_Y, GuiDefaults::ScreenWidth, 18), is_multiline::no)
-    , text_credit(this, Rect16(0, SPLASHSCREEN_VERSION_Y + 20, GuiDefaults::ScreenWidth, 18), is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("FW by Oliver Steiner :D"))
+    , text_credit(this, Rect16(0, SPLASHSCREEN_VERSION_Y + 20, GuiDefaults::ScreenWidth, 18), is_multiline::no, is_closed_on_click_t::no, string_view_utf8::MakeCPUFLASH("Firmware by Oliver Steiner :D"))
     , progress(this, Rect16(SPLASHSCREEN_PROGRESSBAR_X, SPLASHSCREEN_PROGRESSBAR_Y, SPLASHSCREEN_PROGRESSBAR_W, SPLASHSCREEN_PROGRESSBAR_H), COLOR_BRAND, COLOR_GRAY, 6) {
     ClrMenuTimeoutClose();
 

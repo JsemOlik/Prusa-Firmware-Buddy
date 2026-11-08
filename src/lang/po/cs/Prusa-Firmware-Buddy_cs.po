@@ -9687,3 +9687,7 @@ msgstr "Světlý"
 #: src/gui/MItem_tools.cpp
 msgid "Cyan Light"
 msgstr "Světle azurová"
+
+#: src/gui/MItem_tools.cpp
+msgid "Firmware by"
+msgstr "Firmware od"

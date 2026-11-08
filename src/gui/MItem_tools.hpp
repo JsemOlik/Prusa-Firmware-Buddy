@@ -225,6 +225,11 @@ public:
     virtual void OnChange(size_t old_index) override;
 };
 
+class MI_FW_AUTHOR : public IWiInfo {
+public:
+    MI_FW_AUTHOR();
+};
+
 class MI_COLOR_THEME : public MenuItemSwitch {
 public:
     MI_COLOR_THEME();
