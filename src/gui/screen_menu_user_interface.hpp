@@ -17,6 +17,9 @@
 using ScreenMenuUserInterface__ = BasicScreenMenu<
     MI_FOOTER_SETTINGS,
     MI_COLOR_THEME,
+    MI_CUSTOM_THEME_RED,
+    MI_CUSTOM_THEME_GREEN,
+    MI_CUSTOM_THEME_BLUE,
     MI_SOUND_MODE,
     MI_SORT_FILES,
     MI_PRINT_PROGRESS_TIME,
@@ -43,4 +46,7 @@ using ScreenMenuUserInterface__ = BasicScreenMenu<
 class ScreenMenuUserInterface final : public ScreenMenuUserInterface__ {
 public:
     ScreenMenuUserInterface();
+
+protected:
+    void windowEvent(window_t *sender, GUI_event_t event, void *param) override;
 };

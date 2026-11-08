@@ -449,6 +449,7 @@ static constexpr const char *color_theme_items[] = {
     N_("Cyan Light"),
     N_("Sakura"),
     N_("Sakura Dark"),
+    N_("Custom"),
 };
 static_assert(std::size(color_theme_items) == std::to_underlying(color_theme::Theme::_cnt));
 
@@ -461,6 +462,36 @@ bool MI_COLOR_THEME::on_item_selected(const OnItemSelectedArgs &args) {
     color_theme::set(static_cast<color_theme::Theme>(args.new_index));
     Screens::Access()->Get()->Invalidate();
     return true;
+}
+
+/*****************************************************************************/
+// MI_CUSTOM_THEME_CHANNEL
+
+static constexpr NumericInputConfig custom_theme_channel_config {
+    .min_value = 0,
+    .max_value = 255,
+    .step = 5,
+};
+
+MI_CUSTOM_THEME_CHANNEL::MI_CUSTOM_THEME_CHANNEL(uint8_t shift, const char *label)
+    : WiSpin((config_store().custom_theme_color.get() >> shift) & 0xff, custom_theme_channel_config, _(label))
+    , shift(shift) {
+    update_visibility();
+}
+
+void MI_CUSTOM_THEME_CHANNEL::update_visibility() {
+    const bool hidden = color_theme::get() != color_theme::Theme::custom;
+    if (IsHidden() != hidden) {
+        set_is_hidden(hidden);
+    }
+}
+
+void MI_CUSTOM_THEME_CHANNEL::OnClick() {
+    const uint32_t mask = 0xffu << shift;
+    const uint32_t color = (config_store().custom_theme_color.get() & ~mask) | (static_cast<uint32_t>(value()) << shift);
+    config_store().custom_theme_color.set(color);
+    color_theme::set_custom_accent(Color::from_raw(color));
+    Screens::Access()->Get()->Invalidate();
 }
 
 /*****************************************************************************/

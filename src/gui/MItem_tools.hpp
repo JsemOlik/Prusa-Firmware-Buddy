@@ -238,6 +238,40 @@ protected:
     bool on_item_selected(const OnItemSelectedArgs &args) override;
 };
 
+/// One channel of the custom theme accent color; only shown with the custom theme
+class MI_CUSTOM_THEME_CHANNEL : public WiSpin {
+public:
+    /// @param shift bit position of the channel in 0xRRGGBB
+    MI_CUSTOM_THEME_CHANNEL(uint8_t shift, const char *label);
+
+    /// Shows the item only while the custom theme is selected
+    void update_visibility();
+
+protected:
+    void OnClick() override;
+
+private:
+    uint8_t shift;
+};
+
+class MI_CUSTOM_THEME_RED : public MI_CUSTOM_THEME_CHANNEL {
+public:
+    MI_CUSTOM_THEME_RED()
+        : MI_CUSTOM_THEME_CHANNEL(16, N_("Red")) {}
+};
+
+class MI_CUSTOM_THEME_GREEN : public MI_CUSTOM_THEME_CHANNEL {
+public:
+    MI_CUSTOM_THEME_GREEN()
+        : MI_CUSTOM_THEME_CHANNEL(8, N_("Green")) {}
+};
+
+class MI_CUSTOM_THEME_BLUE : public MI_CUSTOM_THEME_CHANNEL {
+public:
+    MI_CUSTOM_THEME_BLUE()
+        : MI_CUSTOM_THEME_CHANNEL(0, N_("Blue")) {}
+};
+
 class MI_SOUND_VOLUME : public WiSpin {
     constexpr static const char *const label = N_("Sound Volume");
 

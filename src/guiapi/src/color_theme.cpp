@@ -32,7 +32,7 @@ namespace {
         return Color::from_raw(raw);
     }
 
-    constexpr std::array<Palette, std::to_underlying(Theme::_cnt)> palettes { {
+    constexpr std::array<Palette, std::to_underlying(Theme::custom)> palettes { {
         // prusa (not remapped at all)
         { COLOR_BLACK, COLOR_DARK_GRAY, COLOR_WHITE, COLOR_WHITE, COLOR_BLACK, COLOR_BRAND },
         // ocean
@@ -63,10 +63,32 @@ namespace {
         { rgb(0x1F1418), rgb(0x4A2C38), rgb(0xFFE4EC), rgb(0xF48FB1), rgb(0x1F1418), rgb(0xF48FB1) },
     } };
 
+    /// Mixes \p amount / 256 of \p color into \p base
+    constexpr Color mix(Color base, Color color, uint16_t amount) {
+        const auto channel = [&](uint8_t a, uint8_t b) {
+            return static_cast<uint8_t>((a * (256 - amount) + b * amount) >> 8);
+        };
+        return Color::from_rgb(channel(base.r, color.r), channel(base.g, color.g), channel(base.b, color.b));
+    }
+
+    /// A dark theme tinted with the accent
+    Palette derive_palette(Color accent) {
+        const Color background = mix(COLOR_BLACK, accent, 24);
+        return {
+            .background = background,
+            .surface = mix(mix(COLOR_BLACK, COLOR_GRAY, 96), accent, 72),
+            .text = mix(COLOR_WHITE, accent, 24),
+            .focus = accent,
+            .focus_text = accent.to_grayscale() >= 128 ? background : COLOR_WHITE,
+            .accent = accent,
+        };
+    }
+
     Theme current = Theme::prusa;
+    Palette custom_palette = derive_palette(COLOR_BRAND);
 
     const Palette &palette() {
-        return palettes[std::to_underlying(current)];
+        return current == Theme::custom ? custom_palette : palettes[std::to_underlying(current)];
     }
 
     bool is_light(Color color) {
@@ -93,6 +115,14 @@ void set(Theme theme) {
 
 Theme get() {
     return current;
+}
+
+void set_custom_accent(Color accent) {
+    custom_palette = derive_palette(accent);
+}
+
+Color accent() {
+    return palette().accent;
 }
 
 Color map_back(Color color) {

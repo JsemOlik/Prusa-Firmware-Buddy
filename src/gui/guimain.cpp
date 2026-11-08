@@ -242,6 +242,7 @@ void gui_run(void) {
     marlin_client::init();
 
     // Applied only now so that the splash screen blends with the bootloader's black screen
+    color_theme::set_custom_accent(Color::from_raw(config_store().custom_theme_color.get()));
     color_theme::set(static_cast<color_theme::Theme>(config_store().color_theme.get()));
 
     // Close bootstrap screen, open home screen

@@ -27,6 +27,8 @@ enum class Theme : uint8_t {
     cyan_light,
     sakura,
     sakura_dark,
+    /// Derived from a user-picked accent color, see set_custom_accent()
+    custom,
     _cnt,
 };
 
@@ -34,6 +36,12 @@ enum class Theme : uint8_t {
 void set(Theme theme);
 
 Theme get();
+
+/// Sets the accent color the custom theme is derived from. Does not redraw anything.
+void set_custom_accent(Color accent);
+
+/// The highlight color of the current theme
+Color accent();
 
 /// Translates a color used to fill an area
 Color map_back(Color color);
