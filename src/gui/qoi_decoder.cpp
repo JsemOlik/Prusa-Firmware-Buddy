@@ -1,4 +1,5 @@
 #include "qoi_decoder.hpp"
+#include <color_theme.hpp>
 #include <cstring>
 #include <bsod/bsod.h>
 
@@ -158,6 +159,10 @@ namespace transform {
     Pixel apply_rop(Pixel pixel, ropfn rop) {
         if (rop.swap_bw == has_swapped_bw::yes) {
             pixel = swapbw(pixel);
+        }
+
+        if (rop.recolor) {
+            color_theme::map_pixel(pixel.r, pixel.g, pixel.b);
         }
 
         if (rop.shadow == is_shadowed::yes) {

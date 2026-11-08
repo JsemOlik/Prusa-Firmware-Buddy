@@ -39,7 +39,7 @@ void draw_from_buffer(point_ui16_t pt, uint16_t w, uint16_t h) {
 }
 
 void clear(const Color clr) {
-    st7789v_clear(color_to_native(color_theme::map(clr)));
+    st7789v_clear(color_to_native(color_theme::map_back(clr)));
 }
 
 } // namespace display
@@ -84,7 +84,7 @@ void draw_from_buffer(point_ui16_t pt, uint16_t w, uint16_t h) {
 }
 
 void clear(const Color clr) {
-    ili9488_clear(color_to_native(color_theme::map(clr)));
+    ili9488_clear(color_to_native(color_theme::map_back(clr)));
 }
 
 } // namespace display
@@ -140,7 +140,7 @@ void draw_from_buffer(point_ui16_t pt, uint16_t w, uint16_t h) {
 }
 
 void clear(const Color clr) {
-    MockDisplay::Instance().clear(color_theme::map(clr));
+    MockDisplay::Instance().clear(color_theme::map_back(clr));
 }
 
 } // namespace display
@@ -270,8 +270,8 @@ void draw_char(point_ui16_t pt, unichar c, const font_t *pf, Color clr_bg, Color
 
 void store_char_in_buffer(uint16_t char_cnt, uint16_t curr_char_idx, unichar c, const font_t *pf, Color clr_bg, Color clr_fg) {
     [[maybe_unused]] StoreCharInBufferMeasure measure { pf };
-    clr_bg = color_theme::map(clr_bg);
-    clr_fg = color_theme::map(clr_fg);
+    clr_bg = color_theme::map_back(clr_bg);
+    clr_fg = color_theme::map_text(clr_fg, clr_bg);
 
     const uint16_t char_w = pf->w; // char width
     const uint16_t char_h = pf->h; // char height
@@ -303,35 +303,41 @@ void store_char_in_buffer(uint16_t char_cnt, uint16_t curr_char_idx, unichar c, 
     }
 }
 
+/// Fills a rectangle with a color already translated by the color theme
+static void fill_rect_themed(Rect16 rc, Color clr) {
+    rc = rc.Intersection(DisplayClip());
+    if (rc.IsEmpty()) {
+        return;
+    }
+    const uint32_t native_color = color_to_native(clr);
+    fill_rect_colorFormatNative(rc.Left(), rc.Top(), rc.Width(), rc.Height(), native_color);
+}
+
 /// Draws a rectangle boundary of defined color
 void draw_rect(Rect16 rc, Color clr) {
     if (rc.IsEmpty()) {
         return;
     }
+    clr = color_theme::map_front(clr);
 
     point_i16_t pt0 = rc.TopLeft();
     point_i16_t pt1 = { int16_t(rc.Left() + rc.Width() - 1), rc.Top() };
     point_i16_t pt2 = { rc.Left(), int16_t(rc.Top() + rc.Height() - 1) };
 
-    fill_rect(Rect16(pt0, rc.Width(), 1), clr); // top
-    fill_rect(Rect16(pt0, 1, rc.Height()), clr); // left
-    fill_rect(Rect16(pt1, 1, rc.Height()), clr); // right
-    fill_rect(Rect16(pt2, rc.Width(), 1), clr); // bottom
+    fill_rect_themed(Rect16(pt0, rc.Width(), 1), clr); // top
+    fill_rect_themed(Rect16(pt0, 1, rc.Height()), clr); // left
+    fill_rect_themed(Rect16(pt1, 1, rc.Height()), clr); // right
+    fill_rect_themed(Rect16(pt2, rc.Width(), 1), clr); // bottom
 }
 
 void fill_rect(Rect16 rc, Color clr) {
-    rc = rc.Intersection(DisplayClip());
-    if (rc.IsEmpty()) {
-        return;
-    }
-    const uint32_t native_color = color_to_native(color_theme::map(clr));
-    fill_rect_colorFormatNative(rc.Left(), rc.Top(), rc.Width(), rc.Height(), native_color);
+    fill_rect_themed(rc, color_theme::map_back(clr));
 }
 
 /// Draws simple line (no antialiasing)
 /// Both end points are drawn
 void draw_line(point_ui16_t pt0, point_ui16_t pt1, Color clr) {
-    const uint32_t native_color = color_to_native(color_theme::map(clr));
+    const uint32_t native_color = color_to_native(color_theme::map_front(clr));
     // todo check rectangle
     int n;
     const int dx = pt1.x - pt0.x; // X-axis dimension
@@ -416,14 +422,14 @@ static void draw_rounded_rect_rad1(Rect16 rect, Color back, Color front, uint8_t
 /// Draws rounded rectangle with parametric corner radius
 /// flag parameter determines which corners will be drawn rounded
 void draw_rounded_rect(Rect16 rect, Color back, Color front, uint8_t cor_rad, uint8_t flag, Color secondary_color) {
-    back = color_theme::map(back);
-    front = color_theme::map(front);
-    secondary_color = color_theme::map(secondary_color);
+    back = color_theme::map_back(back);
+    front = color_theme::map_back(front);
+    secondary_color = color_theme::map_back(secondary_color);
 
     if (cor_rad == 0) {
         // front color is color of rext
         // back is not used (would be drawn behind corners)
-        fill_rect(rect, front);
+        fill_rect_themed(rect, front);
         return;
     }
 
@@ -509,7 +515,7 @@ void set_pixel(point_ui16_t pt, Color clr) {
     if (!DisplayClip().Contain(pt)) {
         return;
     }
-    const uint32_t native_color = color_to_native(color_theme::map(clr));
+    const uint32_t native_color = color_to_native(color_theme::map_front(clr));
     set_pixel_colorFormatNative(pt.x, pt.y, native_color);
 }
 
@@ -552,7 +558,7 @@ void draw_img(point_ui16_t pt, const img::Resource &qoi, Color back_color, ropfn
     ::lseek(resource_fd, qoi.offset, SEEK_SET);
     ResourceFileReader reader;
     const auto rect = Rect16::fromLTWH(pt.x, pt.y, qoi.w, qoi.h);
-    draw_qoi_ex_C(rect, reader, color_theme::map(back_color), color_theme::map(rop));
+    draw_qoi_ex_C(rect, reader, color_theme::map_back(back_color), color_theme::map(rop, back_color));
 }
 
 void draw_img(point_ui16_t pt, AbstractByteReader &reader) {
@@ -562,7 +568,7 @@ void draw_img(point_ui16_t pt, AbstractByteReader &reader) {
         const auto width = qoi::Decoder::get_image_width(buffer);
         const auto height = qoi::Decoder::get_image_height(buffer);
         const auto rect = Rect16::fromLTWH(pt.x, pt.y, width, height);
-        draw_qoi_ex_C(rect, reader, color_theme::map(COLOR_BLACK), color_theme::map(ropfn()));
+        draw_qoi_ex_C(rect, reader, color_theme::map_back(COLOR_BLACK), ropfn());
     } else {
         // Silently refuse to draw invalid QOI
     }

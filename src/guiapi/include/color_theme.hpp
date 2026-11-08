@@ -5,11 +5,13 @@
 
 #include <cstdint>
 
-/// Color themes are applied by the display driver, which remaps the background, text, button and
-/// brand colors of everything drawn. Grayscale icons are inverted in light themes; other colors
-/// baked into images are not remapped.
+/// Color themes are applied by the display driver, which remaps the colors of everything drawn
+/// from the default palette. The same default color can play different roles - white is both
+/// the text color and the background of a focused item - so backgrounds and foregrounds are
+/// remapped separately.
 namespace color_theme {
 
+/// The order is persisted in the config store, so new themes go to the end
 enum class Theme : uint8_t {
     prusa,
     ocean,
@@ -24,6 +26,7 @@ enum class Theme : uint8_t {
     light,
     cyan_light,
     sakura,
+    sakura_dark,
     _cnt,
 };
 
@@ -32,10 +35,19 @@ void set(Theme theme);
 
 Theme get();
 
-/// Translates \p color from the default palette to the current theme
-Color map(Color color);
+/// Translates a color used to fill an area
+Color map_back(Color color);
 
-/// Adjusts raster operations of a grayscale image to keep it visible in the current theme
-ropfn map(ropfn rop);
+/// Translates a color used to draw text or lines
+Color map_front(Color color);
+
+/// Translates a text color, making sure it stays readable on the already translated \p back
+Color map_text(Color color, Color back);
+
+/// Adjusts the raster operations of an image drawn over \p back (not translated yet)
+ropfn map(ropfn rop, Color back);
+
+/// Translates a pixel of an image with ropfn::recolor set
+void map_pixel(uint8_t &r, uint8_t &g, uint8_t &b);
 
 } // namespace color_theme

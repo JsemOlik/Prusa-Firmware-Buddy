@@ -448,6 +448,7 @@ static constexpr const char *color_theme_items[] = {
     N_("Light"),
     N_("Cyan Light"),
     N_("Sakura"),
+    N_("Sakura Dark"),
 };
 static_assert(std::size(color_theme_items) == std::to_underlying(color_theme::Theme::_cnt));
 

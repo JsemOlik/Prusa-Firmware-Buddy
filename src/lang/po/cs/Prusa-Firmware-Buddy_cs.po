@@ -9691,3 +9691,7 @@ msgstr "Světle azurová"
 #: src/gui/MItem_tools.cpp
 msgid "Firmware by"
 msgstr "Firmware od"
+
+#: src/gui/MItem_tools.cpp
+msgid "Sakura Dark"
+msgstr "Tmavá Sakura"
