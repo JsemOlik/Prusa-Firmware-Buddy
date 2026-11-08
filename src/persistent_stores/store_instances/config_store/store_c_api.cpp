@@ -105,6 +105,13 @@ extern "C" float get_steps_per_unit_e() {
     return std::abs(effective_axis_steps_e());
 }
 
+extern "C" uint32_t get_max_acceleration_xy() {
+    return config_store().max_acceleration_xy.get();
+}
+extern "C" uint16_t get_max_feedrate_xy() {
+    return config_store().max_feedrate_xy.get();
+}
+
 extern "C" bool has_inverted_x() {
     return std::signbit(effective_axis_steps_x());
 }

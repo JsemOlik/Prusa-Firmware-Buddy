@@ -821,6 +821,11 @@ struct CurrentStore
     StoreItem<bool, input_shaper::weight_adjust_enabled_default, ItemFlag::calibrations, journal::hash("Input Shaper Weight Adjust Y Enabled V2")> input_shaper_weight_adjust_y_enabled;
     StoreItem<input_shaper::WeightAdjustConfig, input_shaper::weight_adjust_y_default, ItemFlag::calibrations, journal::hash("Input Shaper Weight Adjust Y Config")> input_shaper_weight_adjust_y_config;
 
+    /// User override of the default XY max acceleration (M201) [mm/s^2], 0 = firmware default
+    StoreItem<uint32_t, 0, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Max Acceleration XY")> max_acceleration_xy;
+    /// User override of the default XY max feedrate (M203) [mm/s], 0 = firmware default
+    StoreItem<uint16_t, 0, ItemFlag::features | ItemFlag::common_misconfigurations, journal::hash("Max Feedrate XY")> max_feedrate_xy;
+
     input_shaper::Config get_input_shaper_config();
     void set_input_shaper_config(const input_shaper::Config &);
 

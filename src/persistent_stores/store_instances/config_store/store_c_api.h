@@ -21,6 +21,10 @@ float get_steps_per_unit_x();
 float get_steps_per_unit_y();
 float get_steps_per_unit_z();
 float get_steps_per_unit_e();
+/// @returns user override of the default XY max acceleration, 0 if not overridden
+uint32_t get_max_acceleration_xy();
+/// @returns user override of the default XY max feedrate, 0 if not overridden
+uint16_t get_max_feedrate_xy();
 bool get_has_400step_xy_motors();
 float get_default_steps_per_unit_x_signed();
 float get_default_steps_per_unit_y_signed();

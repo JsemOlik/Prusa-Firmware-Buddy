@@ -9695,3 +9695,19 @@ msgstr "Firmware od"
 #: src/gui/MItem_tools.cpp
 msgid "Sakura Dark"
 msgstr "Tmavá Sakura"
+
+#: src/gui/screen_menu_motion_limits.cpp
+msgid "MOTION LIMITS"
+msgstr "LIMITY POHYBU"
+
+#: src/gui/screen_menu_motion_limits.cpp
+msgid "Max Accel XY [mm/s2]"
+msgstr "Max. zrychlení XY [mm/s2]"
+
+#: src/gui/screen_menu_motion_limits.cpp
+msgid "Max Speed XY [mm/s]"
+msgstr "Max. rychlost XY [mm/s]"
+
+#: src/gui/screen_menu_motion_limits.cpp
+msgid "Motion Limits"
+msgstr "Limity pohybu"

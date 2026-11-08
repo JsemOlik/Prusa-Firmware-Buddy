@@ -222,6 +222,9 @@ using MI_BED_LEVEL_CORRECTION
 #if PRINTER_IS_PRUSA_COREONEL()
 using MI_SPEED_TEST
     = MI_SCREEN<N_("Test Speed"), class ScreenMenuSpeedTest>;
+
+using MI_MOTION_LIMITS
+    = MI_SCREEN<N_("Motion Limits"), class ScreenMenuMotionLimits>;
 #endif
 
 #if HAS_LIGHTS_MENU()

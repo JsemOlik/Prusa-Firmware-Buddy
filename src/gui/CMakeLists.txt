@@ -212,5 +212,5 @@ if(HAS_BED_LEVEL_CORRECTION)
 endif()
 
 if(PRINTER MATCHES "^COREONEL")
-  target_sources(firmware PRIVATE screen_menu_speed_test.cpp)
+  target_sources(firmware PRIVATE screen_menu_motion_limits.cpp screen_menu_speed_test.cpp)
 endif()

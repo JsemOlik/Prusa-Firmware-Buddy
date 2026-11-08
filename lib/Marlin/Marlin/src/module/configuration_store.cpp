@@ -186,6 +186,15 @@ void MarlinSettings::reset_motion(const bool no_limits) {
       s.max_feedrate_mm_s[i]          = pgm_read_float(&_DMF[ALIM(i, _DMF)]);
     }
 
+    #if ENABLED(USE_PRUSA_EEPROM_AS_SOURCE_OF_DEFAULT_VALUES)
+      if (const uint32_t accel = get_max_acceleration_xy()) {
+        s.max_acceleration_mm_per_s2[X_AXIS] = s.max_acceleration_mm_per_s2[Y_AXIS] = accel;
+      }
+      if (const uint16_t feedrate = get_max_feedrate_xy()) {
+        s.max_feedrate_mm_s[X_AXIS] = s.max_feedrate_mm_s[Y_AXIS] = feedrate;
+      }
+    #endif
+
     s.min_segment_time_us = DEFAULT_MINSEGMENTTIME;
     s.acceleration = DEFAULT_ACCELERATION;
     s.retract_acceleration = DEFAULT_RETRACT_ACCELERATION;

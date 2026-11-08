@@ -64,6 +64,7 @@ using ScreenMenuControlSpec = ScreenMenu<EFooter::On,
 #endif
 #if PRINTER_IS_PRUSA_COREONEL()
     MI_SPEED_TEST,
+    MI_MOTION_LIMITS,
 #endif
     MI_ALWAYS_HIDDEN>;
 
