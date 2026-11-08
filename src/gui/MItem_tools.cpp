@@ -453,13 +453,22 @@ static constexpr const char *color_theme_items[] = {
 };
 static_assert(std::size(color_theme_items) == std::to_underlying(color_theme::Theme::_cnt));
 
+void apply_color_theme() {
+    color_theme::set_custom_accent(Color::from_raw(config_store().custom_theme_color.get()));
+    color_theme::set(static_cast<color_theme::Theme>(config_store().color_theme.get()));
+#if HAS_SIDE_LEDS()
+    const Color accent = color_theme::accent();
+    leds::SideStripHandler::instance().set_theme_color(leds::ColorRGBW(accent.r, accent.g, accent.b));
+#endif
+}
+
 MI_COLOR_THEME::MI_COLOR_THEME()
     : MenuItemSwitch(_("Color Theme"), color_theme_items, std::to_underlying(color_theme::get())) {}
 
 bool MI_COLOR_THEME::on_item_selected(const OnItemSelectedArgs &args) {
     MenuItemSwitch::on_item_selected(args);
     config_store().color_theme.set(static_cast<uint8_t>(args.new_index));
-    color_theme::set(static_cast<color_theme::Theme>(args.new_index));
+    apply_color_theme();
     Screens::Access()->Get()->Invalidate();
     return true;
 }
@@ -490,7 +499,7 @@ void MI_CUSTOM_THEME_CHANNEL::OnClick() {
     const uint32_t mask = 0xffu << shift;
     const uint32_t color = (config_store().custom_theme_color.get() & ~mask) | (static_cast<uint32_t>(value()) << shift);
     config_store().custom_theme_color.set(color);
-    color_theme::set_custom_accent(Color::from_raw(color));
+    apply_color_theme();
     Screens::Access()->Get()->Invalidate();
 }
 
@@ -994,6 +1003,13 @@ static constexpr EnumArray<leds::DimmingEnabled, const char *, leds::DimmingEnab
     { leds::DimmingEnabled::always, N_("Always") },
     { leds::DimmingEnabled::not_printing, N_("On Idle") },
 };
+
+MI_SIDE_LEDS_FOLLOW_THEME::MI_SIDE_LEDS_FOLLOW_THEME()
+    : WI_ICON_SWITCH_OFF_ON_t(leds::SideStripHandler::instance().get_follow_theme(), _(label), nullptr, is_enabled_t::yes, is_hidden_t::no) {}
+
+void MI_SIDE_LEDS_FOLLOW_THEME::OnChange([[maybe_unused]] size_t old_index) {
+    leds::SideStripHandler::instance().set_follow_theme(value());
+}
 
 MI_SIDE_LEDS_DIMMING_ENABLE::MI_SIDE_LEDS_DIMMING_ENABLE()
     : MenuItemSwitch(_(label), dimming_enabled_values, std::to_underlying(leds::SideStripHandler::instance().get_dimming_enabled())) {

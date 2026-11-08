@@ -230,6 +230,9 @@ public:
     MI_FW_AUTHOR();
 };
 
+/// Applies the color theme from the config store to the display and the side LEDs. Does not redraw anything.
+void apply_color_theme();
+
 class MI_COLOR_THEME : public MenuItemSwitch {
 public:
     MI_COLOR_THEME();
@@ -591,6 +594,14 @@ public:
     MI_SIDE_LEDS_DIMMED_BRIGTHNESS();
     virtual void OnClick() override;
     virtual void Loop() override;
+};
+
+class MI_SIDE_LEDS_FOLLOW_THEME : public WI_ICON_SWITCH_OFF_ON_t {
+    static constexpr const char *const label = N_("Lights Follow Theme");
+
+public:
+    MI_SIDE_LEDS_FOLLOW_THEME();
+    virtual void OnChange(size_t old_index) override;
 };
 
 class MI_SIDE_LEDS_DIMMING_ENABLE : public MenuItemSwitch {

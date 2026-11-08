@@ -9747,3 +9747,7 @@ msgstr "Použít doporučenou hodnotu jako max. zrychlení?"
 #: src/gui/screen_menu_speed_test.cpp
 msgid "No results yet"
 msgstr "Zatím žádné výsledky"
+
+#: src/gui/MItem_tools.hpp
+msgid "Lights Follow Theme"
+msgstr "Světla podle motivu"

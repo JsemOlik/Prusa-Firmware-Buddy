@@ -44,6 +44,16 @@ public:
 
     void set_custom_color(ColorRGBW color, uint32_t duration_ms, uint32_t transition_ms);
 
+    /// Sets the color used instead of white while following the color theme
+    void set_theme_color(ColorRGBW color);
+
+    /// Whether the strip lights up in the color theme accent instead of white
+    bool get_follow_theme() const;
+    void set_follow_theme(bool value);
+
+    /// Pulses the theme color a few times, if following the theme
+    void notify_print_finished();
+
     void update();
 
     void load_config();
@@ -73,11 +83,18 @@ private:
 
     ColorRGBW get_color_for_state(SideStripState state);
 
+    /// The idle color at brightness \p level
+    ColorRGBW base_color(uint8_t level) const;
+
     struct CustomColorState {
         ColorRGBW color;
         uint32_t start_ms;
         uint32_t duration_ms;
         uint32_t transition_ms;
+
+        /// Blinks with this period if nonzero
+        uint32_t pulse_period_ms = 0;
+        bool pulse_on = true;
     };
 
     mutable freertos::Mutex mutex;
@@ -86,6 +103,8 @@ private:
     DimmingEnabled dimming_enabled;
     uint8_t max_brightness;
     uint8_t dimmed_brightness;
+    bool follow_theme;
+    ColorRGBW theme_color { 255, 255, 255 };
 
     SideStripState state = SideStripState::off;
     uint32_t active_timestamp_ms = 0; // Timestamp of the last activity for idle dimming

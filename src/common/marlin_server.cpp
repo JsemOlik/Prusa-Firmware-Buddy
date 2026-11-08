@@ -273,6 +273,11 @@
     #include <module/prusa/tool_mapper.hpp>
 #endif
 
+#include <option/has_side_leds.h>
+#if HAS_SIDE_LEDS()
+    #include <leds/side_strip_handler.hpp>
+#endif
+
 void record_fanctl_metrics();
 
 using namespace ExtUI;
@@ -2876,6 +2881,9 @@ static void _server_print_loop(void) {
             server.print_state = State::Finished;
             // Don't clean up here - it will be done in State::Exit
             finalize_print(true);
+#if HAS_SIDE_LEDS()
+            leds::SideStripHandler::instance().notify_print_finished();
+#endif
         }
         break;
     case State::Exit:

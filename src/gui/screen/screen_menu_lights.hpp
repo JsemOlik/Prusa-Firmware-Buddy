@@ -16,6 +16,7 @@ using ScreenMenuLightsBase = BasicScreenMenu<
 #endif
 #if HAS_SIDE_LEDS()
     MI_SIDE_LEDS_MAX_BRIGTHNESS,
+    MI_SIDE_LEDS_FOLLOW_THEME,
     MI_SIDE_LEDS_DIMMING_ENABLE,
     MI_SIDE_LEDS_DIMMED_BRIGTHNESS,
 #endif
