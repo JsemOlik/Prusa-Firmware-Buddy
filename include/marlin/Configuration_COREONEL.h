@@ -493,7 +493,7 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = static_cast<float>(CALIB
 
 /// HW limits of feed rate
 #define HWLIMIT_NORMAL_MAX_FEEDRATE \
-    { 500, 500, 15, 50 }
+    { 600, 600, 15, 50 }
 #if HAS_INDX()
 #define HWLIMIT_STEALTH_MAX_FEEDRATE \
     { 140, 140, 12, 100 }
@@ -516,11 +516,11 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = static_cast<float>(CALIB
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
 #define DEFAULT_MAX_ACCELERATION \
-    { 20000, 20000, 500, 1500 }
+    { 10000, 10000, 500, 1500 }
 
 /// HW limits of max acceleration
 #define HWLIMIT_NORMAL_MAX_ACCELERATION \
-    { 20000, 20000, 1000, 6000 }
+    { 30000, 30000, 1000, 6000 }
 #define HWLIMIT_STEALTH_MAX_ACCELERATION \
     { 2500, 2500, 200, 2500 }
 

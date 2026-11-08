@@ -8,6 +8,7 @@
 #include <DialogHandler.hpp>
 #include <common/marlin_vars.hpp>
 #include <config_store/store_instance.hpp>
+#include <inc/MarlinConfigPre.h>
 #include <window_msgbox.hpp>
 
 #include <algorithm>
@@ -28,13 +29,13 @@ constexpr NumericInputConfig runs_config {
 
 constexpr NumericInputConfig speed_config {
     .min_value = 50,
-    .max_value = 500,
+    .max_value = std::to_array<uint16_t>(HWLIMIT_NORMAL_MAX_FEEDRATE)[0],
     .step = 10,
 };
 
 constexpr NumericInputConfig accel_config {
     .min_value = 1000,
-    .max_value = 20000,
+    .max_value = std::to_array<uint32_t>(HWLIMIT_NORMAL_MAX_ACCELERATION)[0],
     .step = 500,
 };
 
@@ -49,7 +50,7 @@ struct Combo {
 constexpr std::array<Combo, speed_test::max_runs> default_combos { {
     { 200, 5000 },
     { 300, 10000 },
-    { 400, 20000 },
+    { 500, 20000 },
 } };
 
 constexpr std::array<const char *, speed_test::max_runs> speed_labels {
