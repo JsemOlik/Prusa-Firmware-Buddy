@@ -441,6 +441,13 @@ static constexpr const char *color_theme_items[] = {
     N_("Amethyst"),
     N_("Crimson"),
     N_("Gold"),
+    N_("Dracula"),
+    N_("Nord"),
+    N_("Cyan"),
+    N_("Synthwave"),
+    N_("Light"),
+    N_("Cyan Light"),
+    N_("Sakura"),
 };
 static_assert(std::size(color_theme_items) == std::to_underlying(color_theme::Theme::_cnt));
 

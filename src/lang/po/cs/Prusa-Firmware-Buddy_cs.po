@@ -9675,3 +9675,15 @@ msgstr "Opakování %u/%u"
 #: src/gui/screen_menu_speed_test.cpp
 msgid "Test"
 msgstr "Test"
+
+#: src/gui/MItem_tools.cpp
+msgid "Cyan"
+msgstr "Azurová"
+
+#: src/gui/MItem_tools.cpp
+msgid "Light"
+msgstr "Světlý"
+
+#: src/gui/MItem_tools.cpp
+msgid "Cyan Light"
+msgstr "Světle azurová"

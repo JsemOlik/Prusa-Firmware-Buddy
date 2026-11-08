@@ -552,7 +552,7 @@ void draw_img(point_ui16_t pt, const img::Resource &qoi, Color back_color, ropfn
     ::lseek(resource_fd, qoi.offset, SEEK_SET);
     ResourceFileReader reader;
     const auto rect = Rect16::fromLTWH(pt.x, pt.y, qoi.w, qoi.h);
-    draw_qoi_ex_C(rect, reader, color_theme::map(back_color), rop);
+    draw_qoi_ex_C(rect, reader, color_theme::map(back_color), color_theme::map(rop));
 }
 
 void draw_img(point_ui16_t pt, AbstractByteReader &reader) {
@@ -562,7 +562,7 @@ void draw_img(point_ui16_t pt, AbstractByteReader &reader) {
         const auto width = qoi::Decoder::get_image_width(buffer);
         const auto height = qoi::Decoder::get_image_height(buffer);
         const auto rect = Rect16::fromLTWH(pt.x, pt.y, width, height);
-        draw_qoi_ex_C(rect, reader, color_theme::map(COLOR_BLACK), ropfn());
+        draw_qoi_ex_C(rect, reader, color_theme::map(COLOR_BLACK), color_theme::map(ropfn()));
     } else {
         // Silently refuse to draw invalid QOI
     }
