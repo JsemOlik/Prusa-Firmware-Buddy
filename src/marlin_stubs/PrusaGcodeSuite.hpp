@@ -6,6 +6,7 @@
 #include "../../lib/Marlin/Marlin/src/gcode/gcode.h"
 
 #include <option/has_gantry_squareness_check.h>
+#include <printers.h>
 #include <option/has_heaters_selftest_gcode.h>
 #include <option/has_esp.h>
 #include <option/has_toolchanger.h>
@@ -190,6 +191,9 @@ void M1986(); //< Empty the INDX nozzle-cleaner wastebin (pause, move aside, res
 #endif
 #if HAS_HEATERS_SELFTEST_GCODE()
 void M1987(); //< Heater selftest
+#endif
+#if PRINTER_IS_PRUSA_COREONEL()
+void M1990(); //< Speed test
 #endif
 
 void M9140(); //< Set normal (non-stealth) mode

@@ -117,6 +117,10 @@ if(HAS_WASTEBIN_FILL_TRACKING)
   target_sources(firmware PRIVATE M1986.cpp)
 endif()
 
+if(PRINTER MATCHES "^COREONEL")
+  target_sources(firmware PRIVATE M1990.cpp)
+endif()
+
 if(HAS_TOOL_OFFSET_SENSOR)
   target_sources(firmware PRIVATE G427.cpp M1985.cpp)
 endif()

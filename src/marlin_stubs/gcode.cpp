@@ -361,6 +361,11 @@ bool GcodeSuite::process_parsed_command_custom(bool no_ok) {
             PrusaGcodeSuite::M1987();
             break;
 #endif
+#if PRINTER_IS_PRUSA_COREONEL()
+        case 1990:
+            PrusaGcodeSuite::M1990();
+            break;
+#endif
         case 9140:
             PrusaGcodeSuite::M9140();
             break;
