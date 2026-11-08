@@ -9643,3 +9643,15 @@ msgstr "Prošlo"
 #: src/gui/screen_menu_speed_test.cpp
 msgid "Skipped steps"
 msgstr "Přeskočené kroky"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Measuring position"
+msgstr "Měření polohy"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Iteration %u/%u"
+msgstr "Opakování %u/%u"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Test"
+msgstr "Test"

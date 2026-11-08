@@ -4,9 +4,12 @@
 #include "img_resources.hpp"
 #include "marlin_client.hpp"
 #include "window_dlg_wait.hpp"
+#include <DialogHandler.hpp>
+#include <common/marlin_vars.hpp>
 #include <window_msgbox.hpp>
 
 #include <cstdio>
+#include <cstring>
 
 namespace {
 
@@ -68,6 +71,36 @@ const char *status_label(speed_test::RunResult::Status status) {
         return N_("Failed");
     }
     return "";
+}
+
+using ProgressText = std::array<char, 128>;
+
+void format_progress(ProgressText &text, uint8_t runs) {
+    using Phase = speed_test::Progress::Phase;
+    const auto &progress = speed_test::progress();
+
+    std::array<char, 48> phase;
+    switch (progress.phase.load()) {
+    case Phase::idle:
+    case Phase::homing:
+        _("Homing").copyToRAM(phase.data(), phase.size());
+        break;
+    case Phase::measuring_before:
+    case Phase::measuring_after:
+        _("Measuring position").copyToRAM(phase.data(), phase.size());
+        break;
+    case Phase::moving: {
+        std::array<char, 32> format;
+        _("Iteration %u/%u").copyToRAM(format.data(), format.size());
+        snprintf(phase.data(), phase.size(), format.data(), progress.iteration.load(), progress.iterations.load());
+        break;
+    }
+    }
+
+    std::array<char, 32> test;
+    _("Test").copyToRAM(test.data(), test.size());
+    snprintf(text.data(), text.size(), "%s %u/%u: %u mm/s, %lu mm/s2\n%s",
+        test.data(), progress.slot.load() + 1, runs, progress.speed.load(), static_cast<unsigned long>(progress.accel.load()), phase.data());
 }
 
 } // namespace
@@ -141,7 +174,25 @@ void ScreenMenuSpeedTest::run_test() {
     for (uint8_t i = 0; i < runs; i++) {
         marlin_client::gcode_printf("M1990 S%u A%u I%d R%u", combos[i].speed, combos[i].accel, iterations, i);
     }
-    window_dlg_wait_t::wait_for_gcodes_to_finish();
+
+    // Two buffers, because the dialog keeps pointing to the displayed one
+    struct {
+        std::array<ProgressText, 2> texts {};
+        size_t shown = 0;
+        uint8_t runs;
+    } state { .runs = runs };
+    window_dlg_wait_t::wait_until({}, [s = &state](window_dlg_wait_t &dlg) {
+        // Allows popping up a warning dialog on top of this one
+        DialogHandler::Access().Loop();
+
+        auto &next = s->texts[1 - s->shown];
+        format_progress(next, s->runs);
+        if (strcmp(next.data(), s->texts[s->shown].data())) {
+            s->shown = 1 - s->shown;
+            dlg.set_text(string_view_utf8::MakeRAM(next.data()));
+        }
+        return !marlin_vars().is_processing.get();
+    });
 
     std::array<char, 384> text;
     size_t len = 0;

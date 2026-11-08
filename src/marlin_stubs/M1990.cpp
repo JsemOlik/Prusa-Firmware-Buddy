@@ -21,11 +21,17 @@ std::array<RunResult, max_runs> &results() {
     return instance;
 }
 
+Progress &progress() {
+    static Progress instance;
+    return instance;
+}
+
 } // namespace speed_test
 
 namespace {
 
 using speed_test::RunResult;
+using Phase = speed_test::Progress::Phase;
 
 /// Inset of the large pattern from the bed edges, so that a small skip does not slam the head into the frame
 constexpr float bound = 20;
@@ -82,6 +88,8 @@ std::optional<xy_pos_t> probe_walls() {
 /// @returns false if the motion was aborted
 bool run_patterns(feedRate_t speed, uint8_t iterations) {
     for (uint8_t i = 0; i < iterations; i++) {
+        // Moves are queued ahead of the motion, so this leads the actual motion by up to a planner buffer
+        speed_test::progress().iteration = i + 1;
         for (const auto *points : { &large_pattern, &small_pattern }) {
             for (const Point &point : *points) {
                 current_position.x = point.x;
@@ -98,11 +106,15 @@ bool run_patterns(feedRate_t speed, uint8_t iterations) {
 }
 
 RunResult::Status run(RunResult &result, float speed, float accel, uint8_t iterations) {
+    auto &progress = speed_test::progress();
+
+    progress.phase = Phase::homing;
     if (!GcodeSuite::G28_no_parser(true, true, true, { .only_if_needed = true })) {
         return RunResult::Status::failed;
     }
     do_blocking_move_to_z(std::max(current_position.z, min_z));
 
+    progress.phase = Phase::measuring_before;
     const auto before = probe_walls();
     if (!before) {
         return RunResult::Status::failed;
@@ -127,14 +139,20 @@ RunResult::Status run(RunResult &result, float speed, float accel, uint8_t itera
 
         SERIAL_ECHOLNPAIR("M1990: speed ", result.speed, " accel ", result.accel, " iterations ", iterations);
 
+        progress.speed = result.speed;
+        progress.accel = result.accel;
+        progress.phase = Phase::moving;
+
         if (!run_patterns(result.speed, iterations)) {
             return RunResult::Status::failed;
         }
     }
 
+    progress.phase = Phase::measuring_after;
     const auto after = probe_walls();
 
     // Leave the printer with a trustworthy position, whatever the outcome
+    progress.phase = Phase::homing;
     if (!GcodeSuite::G28_no_parser(true, true, false)) {
         return RunResult::Status::failed;
     }
@@ -196,9 +214,18 @@ void PrusaGcodeSuite::M1990() {
     const float accel = p.option<float>('A').value_or(planner.user_settings.max_acceleration_mm_per_s2[X_AXIS]);
     const uint8_t iterations = std::clamp<uint8_t>(p.option<uint8_t>('I').value_or(1), 1, speed_test::max_iterations);
 
+    auto &progress = speed_test::progress();
+    progress.slot = slot;
+    progress.iteration = 0;
+    progress.iterations = iterations;
+    progress.speed = static_cast<uint16_t>(speed);
+    progress.accel = static_cast<uint32_t>(accel);
+
     auto &result = speed_test::results()[slot];
     result = {};
     result.status = run(result, speed, accel, iterations);
+
+    progress.phase = Phase::idle;
 }
 
 /** @}*/
