@@ -520,7 +520,7 @@ static constexpr float EXTRUDER_SERVICE_MOVE_E_FACTOR = static_cast<float>(CALIB
 
 /// HW limits of max acceleration
 #define HWLIMIT_NORMAL_MAX_ACCELERATION \
-    { 30000, 30000, 1000, 6000 }
+    { 50000, 50000, 1000, 6000 }
 #define HWLIMIT_STEALTH_MAX_ACCELERATION \
     { 2500, 2500, 200, 2500 }
 
