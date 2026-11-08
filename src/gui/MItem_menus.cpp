@@ -59,6 +59,10 @@
     #include "screen_menu_selftest_snake.hpp"
 #endif
 
+#if PRINTER_IS_PRUSA_COREONEL()
+    #include "screen_menu_speed_test.hpp"
+#endif
+
 #if HAS_FILAMENT_SENSORS_MENU()
     #include "screen_menu_filament_sensors.hpp"
 #endif
@@ -134,6 +138,9 @@ template struct MI_SCREEN_CTOR<ScreenMenuSensorInfo>;
 template struct MI_SCREEN_CTOR<ScreenMenuFailStat>;
 template struct MI_SCREEN_CTOR<ScreenMenuTemperatureAndFans>;
 template struct MI_SCREEN_CTOR<ScreenMenuMove>;
+#if PRINTER_IS_PRUSA_COREONEL()
+template struct MI_SCREEN_CTOR<ScreenMenuSpeedTest>;
+#endif
 template struct MI_SCREEN_CTOR<ScreenMenuMetricsSettings>;
 template struct MI_SCREEN_CTOR<ScreenMenuEthernetSettings>;
 #if HAS_ESP()

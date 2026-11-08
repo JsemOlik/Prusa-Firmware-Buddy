@@ -219,6 +219,11 @@ using MI_BED_LEVEL_CORRECTION
     = MI_SCREEN<N_("Bed Level Correction"), class ScreenMenuBedLevelCorrection>;
 #endif
 
+#if PRINTER_IS_PRUSA_COREONEL()
+using MI_SPEED_TEST
+    = MI_SCREEN<N_("Test Speed"), class ScreenMenuSpeedTest>;
+#endif
+
 #if HAS_LIGHTS_MENU()
 using MI_LIGHTS
     = MI_SCREEN<N_("Lights"), class ScreenMenuLights>;

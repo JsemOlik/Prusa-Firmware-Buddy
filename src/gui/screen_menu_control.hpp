@@ -62,6 +62,9 @@ using ScreenMenuControlSpec = ScreenMenu<EFooter::On,
 #if HAS_SELFTEST()
     MI_SELFTEST_SNAKE,
 #endif
+#if PRINTER_IS_PRUSA_COREONEL()
+    MI_SPEED_TEST,
+#endif
     MI_ALWAYS_HIDDEN>;
 
 class ScreenMenuControl : public ScreenMenuControlSpec {

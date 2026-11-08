@@ -9587,3 +9587,59 @@ msgstr "vyčkejte"
 #: src/gui/screen/selftest/screen_manual_belt_tuning.cpp:45
 msgid "tighten"
 msgstr "utáhnout"
+
+#: src/gui/MItem_menus.hpp
+msgid "Test Speed"
+msgstr "Test rychlosti"
+
+#: src/gui/screen_menu_speed_test.hpp
+msgid "SPEED TEST"
+msgstr "TEST RYCHLOSTI"
+
+#: src/gui/screen_menu_speed_test.hpp
+msgid "Iterations"
+msgstr "Opakování"
+
+#: src/gui/screen_menu_speed_test.hpp
+msgid "Number of Tests"
+msgstr "Počet testů"
+
+#: src/gui/screen_menu_speed_test.hpp
+msgid "Start Test"
+msgstr "Spustit test"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Speed 1 [mm/s]"
+msgstr "Rychlost 1 [mm/s]"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Speed 2 [mm/s]"
+msgstr "Rychlost 2 [mm/s]"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Speed 3 [mm/s]"
+msgstr "Rychlost 3 [mm/s]"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Accel 1 [mm/s2]"
+msgstr "Zrychlení 1 [mm/s2]"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Accel 2 [mm/s2]"
+msgstr "Zrychlení 2 [mm/s2]"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Accel 3 [mm/s2]"
+msgstr "Zrychlení 3 [mm/s2]"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Not run"
+msgstr "Nespuštěno"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Passed"
+msgstr "Prošlo"
+
+#: src/gui/screen_menu_speed_test.cpp
+msgid "Skipped steps"
+msgstr "Přeskočené kroky"

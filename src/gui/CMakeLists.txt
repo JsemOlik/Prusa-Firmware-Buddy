@@ -210,3 +210,7 @@ add_subdirectory(standard_frame)
 if(HAS_BED_LEVEL_CORRECTION)
   target_sources(firmware PRIVATE screen_menu_bed_level_correction.cpp)
 endif()
+
+if(PRINTER MATCHES "^COREONEL")
+  target_sources(firmware PRIVATE screen_menu_speed_test.cpp)
+endif()
