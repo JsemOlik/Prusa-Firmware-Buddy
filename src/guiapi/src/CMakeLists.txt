@@ -1,6 +1,7 @@
 target_sources(
   firmware
-  PRIVATE display_ex.cpp
+  PRIVATE color_theme.cpp
+          display_ex.cpp
           display_helper.cpp
           gui.cpp
           i_window_menu.cpp

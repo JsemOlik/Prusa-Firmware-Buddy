@@ -12,6 +12,7 @@ add_executable(
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/window_frame.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/screen.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/Rect16.cpp
+  ${CMAKE_SOURCE_DIR}/src/guiapi/src/color_theme.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/display_ex.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/display_helper.cpp
   ${CMAKE_SOURCE_DIR}/src/gui/dialogs/IDialog.cpp
@@ -34,6 +35,7 @@ add_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/window_icon_stub.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/screen.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/Rect16.cpp
+  ${CMAKE_SOURCE_DIR}/src/guiapi/src/color_theme.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/display_ex.cpp
   ${CMAKE_SOURCE_DIR}/src/guiapi/src/display_helper.cpp
   ${CMAKE_SOURCE_DIR}/src/common/str_utils.cpp

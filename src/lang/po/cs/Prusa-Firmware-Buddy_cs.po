@@ -9644,6 +9644,26 @@ msgstr "Prošlo"
 msgid "Skipped steps"
 msgstr "Přeskočené kroky"
 
+#: src/gui/MItem_tools.cpp
+msgid "Color Theme"
+msgstr "Barevný motiv"
+
+#: src/gui/MItem_tools.cpp
+msgid "Ocean"
+msgstr "Oceán"
+
+#: src/gui/MItem_tools.cpp
+msgid "Forest"
+msgstr "Les"
+
+#: src/gui/MItem_tools.cpp
+msgid "Amethyst"
+msgstr "Ametyst"
+
+#: src/gui/MItem_tools.cpp
+msgid "Crimson"
+msgstr "Karmín"
+
 #: src/gui/screen_menu_speed_test.cpp
 msgid "Measuring position"
 msgstr "Měření polohy"

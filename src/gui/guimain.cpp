@@ -70,6 +70,7 @@
 #endif
 
 #include <option/has_translations.h>
+#include <color_theme.hpp>
 #if HAS_TRANSLATIONS()
     #include <gui/screen_menu_languages.hpp>
 #endif
@@ -239,6 +240,9 @@ void gui_run(void) {
     }
 
     marlin_client::init();
+
+    // Applied only now so that the splash screen blends with the bootloader's black screen
+    color_theme::set(static_cast<color_theme::Theme>(config_store().color_theme.get()));
 
     // Close bootstrap screen, open home screen
     Screens::Access()->close_screen();

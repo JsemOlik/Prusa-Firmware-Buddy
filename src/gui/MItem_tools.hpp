@@ -225,6 +225,14 @@ public:
     virtual void OnChange(size_t old_index) override;
 };
 
+class MI_COLOR_THEME : public MenuItemSwitch {
+public:
+    MI_COLOR_THEME();
+
+protected:
+    bool on_item_selected(const OnItemSelectedArgs &args) override;
+};
+
 class MI_SOUND_VOLUME : public WiSpin {
     constexpr static const char *const label = N_("Sound Volume");
 

@@ -266,6 +266,7 @@ struct CurrentStore
     StoreItem<uint8_t, 0, ItemFlag::user_interface, journal::hash("File Sort")> file_sort; // filebrowser file sort options
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Menu Timeout")> menu_timeout; // on / off menu timeout flag
     StoreItem<bool, true, ItemFlag::user_interface, journal::hash("Devhash in QR")> devhash_in_qr; // on / off sending UID in QR
+    StoreItem<uint8_t, 0, ItemFlag::user_interface, journal::hash("Color Theme")> color_theme; // color_theme::Theme
 
     static constexpr auto footer_setting_hashes = stdext::array_sub_copy<FOOTER_ITEMS_PER_LINE__>(std::to_array<uint16_t>({
         // Note: those // at the end are there to make the gen_journal_hashes script work

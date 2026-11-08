@@ -12,6 +12,9 @@
 #include "printers.h"
 #include "i18n.h"
 #include "ScreenHandler.hpp"
+#include <color_theme.hpp>
+#include <iterator>
+#include <utility>
 #include "bsod.h"
 #include <buddy/filename_defs.hpp>
 #include <feature/filament_sensor/filament_sensors_handler.hpp>
@@ -426,6 +429,30 @@ void MI_SORT_FILES::OnChange(size_t old_index) {
     } else if (old_index == WF_SORT_BY_NAME) { // was sorted by name, set by time
         GuiFileSort::Set(WF_SORT_BY_TIME);
     }
+}
+
+/*****************************************************************************/
+// MI_COLOR_THEME
+
+static constexpr const char *color_theme_items[] = {
+    N_("Prusa"),
+    N_("Ocean"),
+    N_("Forest"),
+    N_("Amethyst"),
+    N_("Crimson"),
+    N_("Gold"),
+};
+static_assert(std::size(color_theme_items) == std::to_underlying(color_theme::Theme::_cnt));
+
+MI_COLOR_THEME::MI_COLOR_THEME()
+    : MenuItemSwitch(_("Color Theme"), color_theme_items, std::to_underlying(color_theme::get())) {}
+
+bool MI_COLOR_THEME::on_item_selected(const OnItemSelectedArgs &args) {
+    MenuItemSwitch::on_item_selected(args);
+    config_store().color_theme.set(static_cast<uint8_t>(args.new_index));
+    color_theme::set(static_cast<color_theme::Theme>(args.new_index));
+    Screens::Access()->Get()->Invalidate();
+    return true;
 }
 
 /*****************************************************************************/
